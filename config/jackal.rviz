@@ -6,7 +6,9 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /MarkerArray1
         - /Odometry1
+        - /Odometry1/Shape1
         - /Odometry1/Covariance1/Position1
         - /Odometry1/Covariance1/Orientation1
       Splitter Ratio: 0.5
@@ -147,7 +149,7 @@ Visualization Manager:
       Name: MarkerArray
       Namespaces:
         "": true
-      Queue Size: 100
+      Queue Size: 1
       Value: true
     - Angle Tolerance: 0.10000000149011612
       Class: rviz/Odometry
@@ -211,25 +213,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 7.529809951782227
+      Distance: 15.894097328186035
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -1.1388987302780151
-        Y: -0.2148744761943817
-        Z: 0.9572632312774658
+        X: 1.8004734516143799
+        Y: -0.7027328610420227
+        Z: 1.7531139850616455
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.785398006439209
+      Pitch: 0.9803974628448486
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.785398006439209
+      Yaw: 6.21858549118042
     Saved: ~
 Window Geometry:
   Displays:
