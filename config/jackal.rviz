@@ -5,10 +5,6 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /Status1
-        - /MarkerArray1
-        - /Odometry1
-        - /Odometry1/Shape1
         - /Odometry1/Covariance1/Position1
         - /Odometry1/Covariance1/Orientation1
       Splitter Ratio: 0.5
@@ -169,7 +165,7 @@ Visualization Manager:
           Value: true
         Value: false
       Enabled: true
-      Keep: 20
+      Keep: 5
       Name: Odometry
       Position Tolerance: 0.10000000149011612
       Shape:
