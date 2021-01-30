@@ -9,7 +9,7 @@ from gtec_msgs.msg import Ranging
 
 
 class DataPlotter:
-    def __init__(self, tag_ids=("0", "1"), n=0):
+    def __init__(self, tag_ids=("0", "1"), n=-1):
         self.data = dict()
 
         toa_ranging = '/gtec/toa/ranging'
@@ -61,9 +61,14 @@ class DataPlotter:
             self.axes.relim()      # make sure all the data fits
             self.axes.autoscale()  # auto-scale
 
-            plt.draw()
-            plt.pause(0.00001)
+            if self.n > 0 :
+                x_max = self.axes.get_xlim()[-1]
+                x_min = max(x_max - self.n, self.axes.get_xlim()[0])
 
+                self.axes.set_xlim([x_min, x_max])
+
+            plt.draw()
+            plt.pause(0.0001)
             rate.sleep()
         
 if __name__ == "__main__":
