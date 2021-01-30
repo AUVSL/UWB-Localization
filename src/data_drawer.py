@@ -20,7 +20,7 @@ class DataPlotter:
 
         self.n = n
 
-        ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging, queue_size=1)
+        ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
 
 
     def add_ranging(self, msg): 
