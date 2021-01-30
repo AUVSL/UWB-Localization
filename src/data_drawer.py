@@ -42,14 +42,13 @@ class DataPlotter:
                 line
             )
 
-        try:
-            self.data[label][0].append(msg.range)
-            self.data[label][1].append(rospy.Time.now().to_sec())
+        time = rospy.Time.now().to_sec()
 
-            self.data[label][2].set_xdata(self.data[label][1])
-            self.data[label][2].set_ydata(self.data[label][0])
-        except ValueError:
-            print(msg.range, self.data[label][0])
+        self.data[label][0].append(msg.range)
+        self.data[label][1].append(time)
+
+        self.data[label][2].set_xdata(self.data[label][1])
+        self.data[label][2].set_ydata(self.data[label][0])
 
     def run(self):
 
