@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from gtec_msgs.msg import Ranging
 
 
-class DataPlotter:
+class RangePlotter:
     def __init__(self, tag_ids=("0", "1"), n=-1):
         self.data = dict()
 
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     plt.ion()
     plt.show()
 
-    data_plotter = DataPlotter()
+    data_plotter = RangePlotter()
     data_plotter.run()
 
     plt.show()
