@@ -2,3 +2,5 @@
 *.bag
 *.active
 build/
+
+*.pyc
