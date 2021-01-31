@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     while not rospy.is_shutdown():
         try:
-            (trans,rot) = self.tf_listener.lookupTransform(self.world_link, self.robot_link, rospy.Time(0))
+            (trans,rot) = self.tf_listener.lookupTransform(world_link, robot_base_link, rospy.Time(0))
 
             point.x, point.y = trans[0], trans[1]
 
