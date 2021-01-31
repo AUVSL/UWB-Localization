@@ -37,7 +37,7 @@ class LivePlotter:
             self.ax.relim()
             self.ax.autoscale_view()
         except ValueError:
-            rospy.logwarn("Error graphing")
+            print "Error graphing"
 
         return self.objects.values()
 

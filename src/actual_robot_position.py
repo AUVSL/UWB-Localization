@@ -32,6 +32,6 @@ if __name__ == "__main__":
 
             pub.publish(point)
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            rospy.logwarn("Unable to find transform from {} to {}".format(world_link, robot_base_link))
+            print "Unable to find transform"
 
         rate.sleep()
