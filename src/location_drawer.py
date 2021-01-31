@@ -4,10 +4,7 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 
 import rospy
-import matplotlib.pyplot as plt
-from gtec_msgs.msg import Ranging
 from nav_msgs.msg import Odometry
-import tf
 from live_plotter import LivePlotter
 from geometry_msgs.msg import Point
 
@@ -24,6 +21,22 @@ class PositionPlotter:
         self.robot_position_topic = '/data_drawer/robot_pose'
 
         self.robot_position_sub = rospy.Subscriber(self.robot_position_topic, Point, self.add_robot_pose)
+
+        self.subscribers = dict()
+
+        for position_link in position_links:
+            self.subscribers[position_link] = rospy.Subscriber(position_link, Odometry, self.create_position_subscriber_func(position_link))
+
+    def create_position_subscriber_func(self, name):
+        def add_pose(msg):
+            # type: (Odometry) -> None
+
+            x = msg.pose.pose.position.x
+            y = msg.pose.pose.position.y 
+
+            self.live_plotter.add_data_point(name, x, y)
+
+        return add_pose
 
     def add_robot_pose(self, msg):
         self.live_plotter.add_data_point(self.robot_name, msg.x, msg.y)
