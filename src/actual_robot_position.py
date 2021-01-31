@@ -9,7 +9,7 @@ import sys
 if __name__ == "__main__":
     rospy.init_node("robot_position_publisher_node")
 
-    if sys.argv < 3:
+    if len(sys.argv) < 3:
         raise ValueError("Expecting arugments: world_link robot_base_link")
 
     else:
@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     while not rospy.is_shutdown():
         try:
-            (trans,rot) = self.tf_listener.lookupTransform(world_link, robot_base_link, rospy.Time(0))
+            (trans,rot) = tf_listener.lookupTransform(world_link, robot_base_link, rospy.Time(0))
 
             point.x, point.y = trans[0], trans[1]
 
