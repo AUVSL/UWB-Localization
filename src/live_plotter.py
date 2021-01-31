@@ -3,13 +3,14 @@ from matplotlib.animation import FuncAnimation
 
 
 class LivePlotter:
-    def __init__(self, update_interval=1000):
+    def __init__(self, update_interval=1000, alpha=1.0):
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(1, 1, 1)
         self.fig.tight_layout()
 
         self.update_interval = update_interval
 
+        self.alpha = alpha
         self.data = dict()
         self.objects = dict()
         self.ani = None
@@ -21,7 +22,7 @@ class LivePlotter:
                 "y": []
             }
 
-            line, = self.ax.plot([], [], label=object_name)
+            line, = self.ax.plot([], [], label=object_name, alpha=self.alpha)
 
             self.objects[object_name] = line
 
