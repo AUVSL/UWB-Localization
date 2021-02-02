@@ -10,7 +10,7 @@ from geometry_msgs.msg import Point
 
 
 class PositionPlotter:
-    def __init__(self, world_link="/world",robot_link='/base_link', robot_name='jackal', position_links=['/odometry/filtered', '/ground_truth/state']):
+    def __init__(self, world_link="/world",robot_link='/base_link', robot_name='jackal', position_links=['/odometry/filtered', '/ground_truth/state', '/jackal/uwb/pose']):
         self.live_plotter = LivePlotter(alpha=0.5)
         self.live_plotter.ax.set_aspect("equal")
 
