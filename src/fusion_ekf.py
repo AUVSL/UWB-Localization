@@ -11,9 +11,9 @@ class FusionEKF:
         self.is_initialized = False
         self.previous_timestamp = 0
 
-        self.noise_ax = 1
-        self.noise_ay = 1
-        self.noise_az = 1
+        self.noise_ax = .1
+        self.noise_ay = .1
+        self.noise_az = .1
 
         self.noise_vector = np.diag([self.noise_ax, self.noise_ay, self.noise_az])
 
@@ -53,7 +53,7 @@ class FusionEKF:
 
         self.kalman_filter.update(anchor_pose, anchor_distance)
 
-        print("X:", self.kalman_filter.x)
+        # print("X:", self.kalman_filter.x)
         # print("P:", self.kalman_filter.P)
         # print(self.kalman_filter.Q)
 
