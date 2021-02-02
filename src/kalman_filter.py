@@ -38,9 +38,7 @@ class KalmanFilter:
 
         H_transpose = np.transpose(self.H)
 
-        self.S: np.ndarray = np.matmul(np.matmul(self.H, self.P), H_transpose) + self.R
-
-        print(self.S.shape)
+        self.S = np.matmul(np.matmul(self.H, self.P), H_transpose) + self.R
 
         distance_sub = d - d_k
         inverse_S = np.linalg.inv(self.S)
