@@ -28,7 +28,8 @@ class FusionEKF:
 
         self.kalman_filter.x = np.zeros((6, 1))
 
-        self.uwb_std = 23.5 / 1000
+        # self.uwb_std = 23.5 / 1000
+        self.uwb_std = 23.5 / 10
 
         self.R_UWB = np.array([
             [self.uwb_std ** 2]
