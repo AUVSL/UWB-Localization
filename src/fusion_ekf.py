@@ -18,9 +18,9 @@ class FusionEKF:
         self.noise_vector = np.diag([self.noise_ax, self.noise_ay, self.noise_az])
 
         self.kalman_filter.P = np.array([
-            [1000, 0, 0, 0, 0, 0],
-            [0, 1000, 0, 0, 0, 0],
-            [0, 0, 1000, 0, 0, 0],
+            [1, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0],
             [0, 0, 0, 1, 0, 0],
             [0, 0, 0, 0, 1, 0],
             [0, 0, 0, 0, 0, 1]
