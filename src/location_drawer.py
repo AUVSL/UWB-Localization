@@ -13,7 +13,7 @@ import sys
 class PositionPlotter:
     def __init__(self, robot_name='jackal', position_links=None):
         if position_links is None:
-            position_links = ['/odometry/filtered', '/ground_truth/state', '/jackal/uwb/pose/0', '/jackal/uwb/pose/1' ]
+            position_links = ['/odometry/filtered', '/ground_truth/state', '/jackal/uwb/pose/0', '/jackal/uwb/pose/1', '/jackal/uwb/odom' ]
 
 
         self.live_plotter = LivePlotter(alpha=0.5)
