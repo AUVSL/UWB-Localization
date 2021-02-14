@@ -7,15 +7,18 @@ import rospy
 from nav_msgs.msg import Odometry
 from live_plotter import LivePlotter
 from geometry_msgs.msg import Point
+import sys
 
 
 class PositionPlotter:
-    def __init__(self, world_link="/world",robot_link='/base_link', robot_name='jackal', position_links=['/odometry/filtered', '/ground_truth/state', '/jackal/uwb/pose/0', '/jackal/uwb/pose/1' ]):
+    def __init__(self, robot_name='jackal', position_links=None):
+        if position_links is None:
+            position_links = ['/odometry/filtered', '/ground_truth/state', '/jackal/uwb/pose/0', '/jackal/uwb/pose/1' ]
+
+
         self.live_plotter = LivePlotter(alpha=0.5)
         self.live_plotter.ax.set_aspect("equal")
 
-        self.world_link = world_link
-        self.robot_link = robot_link
         self.robot_name = robot_name
 
         self.robot_position_topic = '/data_drawer/robot_pose'
@@ -48,6 +51,11 @@ class PositionPlotter:
 if __name__ == "__main__":
     rospy.init_node("location_drawer_node")
 
-    data_plotter = PositionPlotter()
+    myargv = rospy.myargv(argv=sys.argv)[1:]
+
+    if len(myargv) == 0:
+        myargv = None
+
+    data_plotter = PositionPlotter(position_links=myargv)
     data_plotter.run()
     rospy.spin()
