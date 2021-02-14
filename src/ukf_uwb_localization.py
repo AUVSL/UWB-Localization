@@ -10,7 +10,7 @@ from gtec_msgs.msg import Ranging
 import tf
 
 class UKFUWBLocalization:
-    def __init__(self, uwb_std=0.25, accel_std=.9, yaw_accel_std=.6):
+    def __init__(self, uwb_std=0.1, accel_std=0.01, yaw_accel_std=0.01, alpha=1):
         sensor_std = {
             DataType.UWB: {
                 'std': [uwb_std],
@@ -18,7 +18,7 @@ class UKFUWBLocalization:
             }
         }
 
-        self.ukf = FusionUKF(sensor_std, accel_std, yaw_accel_std)
+        self.ukf = FusionUKF(sensor_std, accel_std, yaw_accel_std, alpha)
 
         self.anchor_poses = dict()
         self.tag_offset = self.retrieve_tag_offsets({"left_tag":1, "right_tag":0})
@@ -60,7 +60,6 @@ class UKFUWBLocalization:
         # type: (MarkerArray) -> None
 
         for marker in msg.markers:
-            self.anchor_poses[marker.id] = np.array([marker.pose.position.x,marker.pose.position.y,marker.pose.position.z]) 
             self.anchor_poses[marker.id] = np.array([marker.pose.position.x,marker.pose.position.y]) 
 
     def add_ranging(self, msg):
