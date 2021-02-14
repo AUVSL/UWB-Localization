@@ -71,7 +71,8 @@ class UKFUWBLocalization:
 
             data = DataPoint(DataType.UWB, anchor_distance, rospy.get_time(), extra={
                 "anchor": anchor_pose,
-                'sensor_offset': self.tag_offset[msg.tagId]
+                # 'sensor_offset': self.tag_offset[msg.tagId]
+                'sensor_offset': None
             })
 
             self.ukf.update(data)
