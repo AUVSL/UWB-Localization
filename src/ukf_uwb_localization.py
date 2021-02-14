@@ -81,7 +81,7 @@ class UKFUWBLocalization:
         self.ukf.initialize(x, P, rospy.get_time())
 
     def run(self):
-        rate = rospy.Rate(60)
+        rate = rospy.Rate(30)
 
         while not rospy.is_shutdown():
             x, y, v, yaw, yaw_rate = self.ukf.x
