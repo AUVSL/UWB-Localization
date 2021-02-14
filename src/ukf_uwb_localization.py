@@ -33,6 +33,7 @@ class UKFUWBLocalization:
 
         publish_odom = '/jackal/uwb/odom'
         self.estimated_pose = rospy.Publisher(publish_odom, Odometry, queue_size=1)
+        self.odom = Odometry()
 
     def retrieve_tag_offsets(self, tags, base_link='base_link'):
         transforms = dict() 
@@ -60,6 +61,7 @@ class UKFUWBLocalization:
 
         for marker in msg.markers:
             self.anchor_poses[marker.id] = np.array([marker.pose.position.x,marker.pose.position.y,marker.pose.position.z]) 
+            self.anchor_poses[marker.id] = np.array([marker.pose.position.x,marker.pose.position.y]) 
 
     def add_ranging(self, msg):
         # type: (Ranging) -> None
@@ -68,8 +70,35 @@ class UKFUWBLocalization:
             anchor_pose = self.anchor_poses[msg.anchorId]
             anchor_distance = msg.range / 1000.
 
+            data = DataPoint(DataType.UWB, anchor_distance, rospy.get_time(), extra={
+                "anchor": anchor_pose,
+                'sensor_offset': self.tag_offset[msg.tagId]
+            })
+
+            self.ukf.update(data)
+
+    def intialize(self, x, P):
+        self.ukf.initialize(x, P, rospy.get_time())
+
+    def run(self):
+        rate = rospy.Rate(60)
+
+        while not rospy.is_shutdown():
+            x, y, v, yaw, yaw_rate = self.ukf.x
+
+            self.odom.pose.pose.position.x = x
+            self.odom.pose.pose.position.y = y
+            self.odom.twist.twist.linear.x = v
+
+            self.estimated_pose.publish(self.odom)
+
+            rate.sleep()
+
 if __name__ == "__main__":
     rospy.init_node("ukf_uwb_localization_kalman")
     loc = UKFUWBLocalization()
+    loc.intialize(np.array([0,0]), np.eye(5) * 10)
+
+    loc.run()
 
     rospy.spin()
