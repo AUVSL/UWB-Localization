@@ -1,4 +1,5 @@
 import numpy as np
+from datapoint import DataType
 
 
 class StateUpdater:
@@ -16,13 +17,13 @@ class StateUpdater:
 
         return np.matmul(self.WEIGHTS * dx, dz)
 
-    def update(self, z, S, Tc, predicted_z, predicted_x, predicted_P):
+    def update(self, z, S, Tc, predicted_z, predicted_x, predicted_P, data_type):
         Si = np.linalg.inv(S)
         K = np.matmul(Tc, Si)
 
         dz = z - predicted_z
 
-        if(len(dz) == 5):
+        if(data_type == DataType.ODOMETRY):
             if dz[3] < -np.pi:
                 dz[3] += (np.pi * 2)
             elif dz[3] > np.pi:
@@ -34,6 +35,6 @@ class StateUpdater:
         self.P = predicted_P - np.matmul(K, np.matmul(S, K.transpose()))
         self.nis = np.matmul(dz.transpose(), np.matmul(Si, dz))
 
-    def process(self, predicted_x, predicted_z, z, S, predicted_P, sigma_x, sigma_z):
+    def process(self, predicted_x, predicted_z, z, S, predicted_P, sigma_x, sigma_z, data_type):
         Tc = self.compute_Tc(predicted_x, predicted_z, sigma_x, sigma_z)
-        self.update(z, S, Tc, predicted_z, predicted_x, predicted_P)
+        self.update(z, S, Tc, predicted_z, predicted_x, predicted_P, data_type)

@@ -86,7 +86,7 @@ class FusionUKF:
 
         # STATE UPDATE
         # updated the state and covariance of state... also get the nis
-        self.state_updater.process(self.x, predicted_z, data.measurement_data, S, self.P, sigma_x, sigma_z)
+        self.state_updater.process(self.x, predicted_z, data.measurement_data, S, self.P, sigma_x, sigma_z, data.data_type)
         self.x = self.state_updater.x
         self.P = self.state_updater.P
         self.nis = self.state_updater.nis
