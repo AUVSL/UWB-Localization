@@ -22,6 +22,12 @@ class StateUpdater:
 
         dz = z - predicted_z
 
+        if(len(dz) == 5):
+            if dz[3] < -np.pi:
+                dz[3] += (np.pi * 2)
+            elif dz[3] > np.pi:
+                dz[3] -= (np.pi * 2)
+            
         # Dm = np.sqrt(np.matmul(np.matmul(dz, Si), dz))
 
         self.x = predicted_x + np.matmul(K, dz)

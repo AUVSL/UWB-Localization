@@ -58,6 +58,12 @@ class MeasurementPredictor:
 
             distances = np.linalg.norm(sensor_pose - self.anchor_pos.reshape((-1, 1)), axis=0)
             sigma[0] = distances
+        elif self.current_type == DataType.ODOMETRY:
+            sigma[0] = sigma_x[0] #px
+            sigma[1] = sigma_x[1] #py
+            sigma[2] = sigma_x[2] #v
+            sigma[3] = sigma_x[3] #theta
+            sigma[4] = sigma_x[4] #theta_yaw
 
         return sigma
 

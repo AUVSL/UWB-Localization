@@ -92,6 +92,9 @@ class StatePredictor:
 
         # ------------------
 
+        predicted_sigma[3,predicted_sigma[3] < 0] += (2 * np.pi)
+        predicted_sigma[3, predicted_sigma[3] > np.pi] %= (2 * np.pi)
+
         return predicted_sigma
 
     def predict_x(self, predicted_sigma):

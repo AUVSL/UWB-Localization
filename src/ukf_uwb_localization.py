@@ -8,6 +8,7 @@ from nav_msgs.msg import Odometry
 from visualization_msgs.msg import MarkerArray
 from gtec_msgs.msg import Ranging
 import tf
+from tf.transformations import euler_from_quaternion, euler_from_quaternion 
 
 class UKFUWBLocalization:
     def __init__(self, uwb_std=0.1, accel_std=0.01, yaw_accel_std=0.01, alpha=1):
@@ -30,6 +31,8 @@ class UKFUWBLocalization:
 
         anchors_sub = rospy.Subscriber(anchors, MarkerArray, callback=self.add_anchors)
         ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
+        odometry = '/odometry/filtered'
+        odometry = rospy.Subscriber(odometry, Odometry, callback=self.add_odometry)
 
         publish_odom = '/jackal/uwb/odom'
         self.estimated_pose = rospy.Publisher(publish_odom, Odometry, queue_size=1)
@@ -55,6 +58,29 @@ class UKFUWBLocalization:
                 rate.sleep()
 
         return transforms
+
+    def add_odometry(self, msg):
+        px = msg.pose.pose.position.x
+        py = msg.pose.pose.position.y
+
+        v = msg.twist.twist.linear.x
+        theta = euler_from_quaternion((
+            msg.pose.pose.orientation.x,
+            msg.pose.pose.orientation.y,
+            msg.pose.pose.orientation.z,
+            msg.pose.pose.orientation.w
+        ))[2]
+
+        if theta < 0:
+            theta += (np.pi * 2)
+
+        print theta, self.ukf.x[3]
+
+        theta_yaw = msg.twist.twist.angular.z
+
+        data = DataPoint(DataType.ODOMETRY, np.array([px, py, v, theta, theta_yaw]), rospy.get_time())
+
+        self.ukf.update(data)
 
     def add_anchors(self, msg):
         # type: (MarkerArray) -> None
@@ -89,6 +115,7 @@ class UKFUWBLocalization:
             self.odom.pose.pose.position.x = x
             self.odom.pose.pose.position.y = y
             self.odom.twist.twist.linear.x = v
+            self.odom.twist.twist.angular.z = yaw_rate
 
             self.estimated_pose.publish(self.odom)
 
