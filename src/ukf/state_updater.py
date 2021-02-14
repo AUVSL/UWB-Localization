@@ -22,6 +22,8 @@ class StateUpdater:
 
         dz = z - predicted_z
 
+        # Dm = np.sqrt(np.matmul(np.matmul(dz, Si), dz))
+
         self.x = predicted_x + np.matmul(K, dz)
         self.P = predicted_P - np.matmul(K, np.matmul(S, K.transpose()))
         self.nis = np.matmul(dz.transpose(), np.matmul(Si, dz))

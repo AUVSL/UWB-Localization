@@ -70,8 +70,6 @@ class FusionUKF:
         if(dt < 0.001):
             dt = 0.001
 
-        # print(dt)
-
         # STATE PREDICTION
         # get predicted state and covariance of predicted state, predicted sigma points in state space
         self.state_predictor.process(self.x, self.P, dt)
