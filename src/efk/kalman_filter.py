@@ -3,7 +3,7 @@ import numpy as np
 
 class KalmanFilter:
     def __init__(self):
-        self.threshold = float("inf")
+        self.threshold = 100
         self.x = None
         self.P = None
         self.F = None
@@ -44,6 +44,8 @@ class KalmanFilter:
         inverse_S = np.linalg.inv(self.S)
 
         Dm = np.sqrt(distance_sub * inverse_S * distance_sub)
+
+        print Dm
 
         if np.all(Dm < self.threshold):
             self.K = np.matmul(np.matmul(self.P, H_transpose), inverse_S)

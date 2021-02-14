@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import rospy
-from fusion_ekf import FusionEKF
+from efk.fusion_ekf import FusionEKF
 from visualization_msgs.msg import MarkerArray
 from gtec_msgs.msg import Ranging
 import numpy as np

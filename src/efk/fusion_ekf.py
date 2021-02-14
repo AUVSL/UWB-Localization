@@ -11,9 +11,9 @@ class FusionEKF:
         self.is_initialized = False
         self.previous_timestamp = 0
 
-        self.noise_ax = .01
-        self.noise_ay = .01
-        self.noise_az = .01
+        self.noise_ax = 1
+        self.noise_ay = 1
+        self.noise_az = 1
 
         self.noise_vector = np.diag([self.noise_ax, self.noise_ay, self.noise_az])
 
