@@ -7,9 +7,7 @@ from state_updater import StateUpdater
 
 
 class FusionUKF:
-    def __init__(self, sensor_std, speed_noise_std=.9, yaw_rate_noise_std=.6) -> None:
-        super().__init__()
-
+    def __init__(self, sensor_std, speed_noise_std=.9, yaw_rate_noise_std=.6):
         self.initialized = False
 
         # Number of total states X, Y, velocity, yaw, yaw rate
@@ -65,7 +63,7 @@ class FusionUKF:
         else:
             self.initialize(data.measurement_data, np.eye(self.NX), data.timestamp)
 
-    def process(self, data: DataPoint):
+    def process(self, data):
         dt = data.timestamp - self.timestamp  # seconds
 
         # STATE PREDICTION

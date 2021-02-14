@@ -2,8 +2,7 @@ import numpy as np
 
 
 class StateUpdater:
-    def __init__(self, NX, N_SIGMA, WEIGHTS) -> None:
-        super().__init__()
+    def __init__(self, NX, N_SIGMA, WEIGHTS):
         self.N_SIGMA = N_SIGMA
         self.WEIGHTS = WEIGHTS
         self.NX = NX

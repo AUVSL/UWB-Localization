@@ -3,8 +3,6 @@ import numpy as np
 
 class StatePredictor:
     def __init__(self, NX, N_SIGMA, N_AUGMENTED, VAR_SPEED_NOISE, VAR_YAW_RATE_NOISE, SCALE, WEIGHTS):
-        super().__init__()
-
         self.WEIGHTS = WEIGHTS
         self.NX = NX
         self.SCALE = SCALE

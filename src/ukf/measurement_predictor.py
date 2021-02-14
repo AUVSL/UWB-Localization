@@ -4,9 +4,7 @@ from datapoint import DataType
 
 
 class MeasurementPredictor:
-    def __init__(self, sensor_std, N_SIGMA, WEIGHTS) -> None:
-        super().__init__()
-
+    def __init__(self, sensor_std, N_SIGMA, WEIGHTS):
         self.sensor_std = sensor_std
 
         self.compute_R_matrix()
