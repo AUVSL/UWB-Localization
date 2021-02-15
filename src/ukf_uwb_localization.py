@@ -123,8 +123,13 @@ class UKFUWBLocalization:
 
 if __name__ == "__main__":
     rospy.init_node("ukf_uwb_localization_kalman")
-    loc = UKFUWBLocalization()
-    loc.intialize(np.array([0,0]), np.eye(5) * 10)
+
+    intial_pose = rospy.wait_for_message('/ground_truth/state', Odometry)
+    x, y = intial_pose.pose.pose.position.x, intial_pose.pose.pose.position.y
+
+
+    loc = UKFUWBLocalization(alpha=0.5)
+    loc.intialize(np.array([x, y ]), np.eye(5) * .1)
 
     loc.run()
 
