@@ -11,11 +11,15 @@ import tf
 from tf.transformations import euler_from_quaternion, euler_from_quaternion 
 
 class UKFUWBLocalization:
-    def __init__(self, uwb_std=0.1, accel_std=0.01, yaw_accel_std=0.01, alpha=1):
+    def __init__(self, uwb_std=0.1, odometry_std=[1,1,.5,1,1], accel_std=0.01, yaw_accel_std=0.01, alpha=1):
         sensor_std = {
             DataType.UWB: {
                 'std': [uwb_std],
                 'nz': 1
+            },
+            DataType.ODOMETRY: {
+                'std' : odometry_std,
+                'nz': 5
             }
         }
 
