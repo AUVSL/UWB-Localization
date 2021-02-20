@@ -7,7 +7,7 @@ from state_updater import StateUpdater
 
 
 class FusionUKF:
-    def __init__(self, sensor_std, speed_noise_std=.9, yaw_rate_noise_std=.6, alpha=1):
+    def __init__(self, sensor_std, speed_noise_std=.9, yaw_rate_noise_std=.6, alpha=1, beta=0):
         self.initialized = False
 
         # Number of total states X, Y, velocity, yaw, yaw rate
@@ -20,7 +20,7 @@ class FusionUKF:
         self.LAMBDA =  (self.ALPHA ** 2) *  (self.NX + 3 - self.N_AUGMENTED) - self.NX
         self.SCALE = np.sqrt(self.LAMBDA + self.N_AUGMENTED)
         self.W = 0.5 / (self.LAMBDA + self.N_AUGMENTED)
-        self.W0 = self.LAMBDA / (self.LAMBDA + self.N_AUGMENTED)
+        self.W0 = self.LAMBDA / (self.LAMBDA + self.N_AUGMENTED) + ( 1 - alpha ** 2 + beta)
 
         self.WEIGHTS = np.full(self.N_SIGMA, self.W)
         self.WEIGHTS[0] = self.W0
