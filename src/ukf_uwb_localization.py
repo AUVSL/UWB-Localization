@@ -130,10 +130,19 @@ if __name__ == "__main__":
 
     intial_pose = rospy.wait_for_message('/ground_truth/state', Odometry)
     x, y = intial_pose.pose.pose.position.x, intial_pose.pose.pose.position.y
+    v = intial_pose.twist.twist.linear.x
+    theta = euler_from_quaternion((
+        intial_pose.pose.pose.orientation.x,
+        intial_pose.pose.pose.orientation.y,
+        intial_pose.pose.pose.orientation.z,
+        intial_pose.pose.pose.orientation.w
+    ))[2]
+
+    print x, y, v, theta
 
 
     loc = UKFUWBLocalization(alpha=0.5)
-    loc.intialize(np.array([x, y ]), np.eye(5) * .1)
+    loc.intialize(np.array([x, y, v, theta ]), np.eye(5) * 1)
 
     loc.run()
 
