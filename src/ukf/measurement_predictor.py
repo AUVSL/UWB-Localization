@@ -79,6 +79,12 @@ class MeasurementPredictor:
         self.initialize(data)
         self.sigma_z = self.compute_sigma_z(sigma_x)
         self.z = self.compute_z(self.sigma_z)
+
+        if self.current_type == DataType.ODOMETRY:
+            self.z[3] %= (2 * np.pi)
+            if self.z[3] > np.pi:
+                self.z[3] -= (2 * np.pi)
+
         self.S = self.compute_S(self.sigma_z, self.z)
 
     def compute_R_matrix(self):

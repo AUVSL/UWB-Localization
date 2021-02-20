@@ -104,8 +104,10 @@ class StatePredictor:
 
     def predict_P(self, predicted_sigma, predicted_x):
         sub = np.subtract(predicted_sigma.T, predicted_x).T
+
+        sub[3] %= 2 * np.pi
         mask = np.abs(sub[3]) > np.pi
-        sub[3, mask] = sub[3, mask] % (np.pi * 2)
+        sub[3, mask] -= (np.pi * 2)
 
         return np.matmul(self.WEIGHTS * sub, sub.T)
 
@@ -113,4 +115,13 @@ class StatePredictor:
         augmented_sigma = self.compute_augmented_sigma(x, P)
         self.sigma = self.predict_sigma(augmented_sigma, dt)
         self.x = self.predict_x(self.sigma)
+
+        self.x[3] %= (2 * np.pi)
+        if self.x[3] > np.pi:
+            self.x[3] -= (2 * np.pi)
+
         self.P = self.predict_P(self.sigma, self.x)
+
+        self.P[3] %= 2 * np.pi
+        mask = np.abs(self.P[3]) > np.pi
+        self.P[3, mask] -= (np.pi * 2)

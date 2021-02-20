@@ -10,10 +10,16 @@ class StateUpdater:
 
     def compute_Tc(self, predicted_x, predicted_z, sigma_x, sigma_z):
         dx = np.subtract(sigma_x.T, predicted_x).T
+
+        dx[3] %= (2 * np.pi)
         mask = np.abs(dx[3]) > np.pi
-        dx[3, mask] = dx[3, mask] % (np.pi * 2)
+        dx[3, mask] -= (np.pi * 2)
 
         dz = np.subtract(sigma_z.T, predicted_z)
+
+        dz[3] %= 2 * np.pi
+        mask = np.abs(dz[3]) > np.pi
+        dz[3, mask] -= (np.pi * 2)
 
         return np.matmul(self.WEIGHTS * dx, dz)
 
@@ -24,10 +30,7 @@ class StateUpdater:
         dz = z - predicted_z
 
         if(data_type == DataType.ODOMETRY):
-            if dz[3] < -np.pi:
-                dz[3] += (np.pi * 2)
-            elif dz[3] > np.pi:
-                dz[3] -= (np.pi * 2)
+            dz[3] = (dz[3] + np.pi) % (2 * np.pi) - np.pi 
             
         # Dm = np.sqrt(np.matmul(np.matmul(dz, Si), dz))
 
@@ -38,3 +41,11 @@ class StateUpdater:
     def process(self, predicted_x, predicted_z, z, S, predicted_P, sigma_x, sigma_z, data_type):
         Tc = self.compute_Tc(predicted_x, predicted_z, sigma_x, sigma_z)
         self.update(z, S, Tc, predicted_z, predicted_x, predicted_P, data_type)
+
+        self.x[3] %= 2 * np.pi
+        if self.x[3] > np.pi:
+            self.x[3] -= (2 * np.pi)
+
+        self.P[3] %= 2 * np.pi
+        mask = np.abs(self.P[3]) > np.pi
+        self.P[3, mask] -= (np.pi * 2)
