@@ -4,5 +4,6 @@
     "files.eol": "\n",
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
-    "python.formatting.provider": "autopep8"
+    "python.formatting.provider": "autopep8",
+    "cmake.configureOnOpen": false
 }
