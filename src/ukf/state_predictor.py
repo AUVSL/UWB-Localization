@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.linalg import sqrtm
 from state import UKFState
+from util import normalize
 
 
 class StatePredictor:
@@ -97,9 +98,6 @@ class StatePredictor:
 
         # ------------------
 
-        # predicted_sigma[3,predicted_sigma[3] < 0] += (2 * np.pi)
-        # predicted_sigma[3, predicted_sigma[3] > np.pi] %= (2 * np.pi)
-
         return predicted_sigma
 
     def predict_x(self, predicted_sigma):
@@ -108,9 +106,7 @@ class StatePredictor:
     def predict_P(self, predicted_sigma, predicted_x):
         sub = np.subtract(predicted_sigma.T, predicted_x).T
 
-        sub[UKFState.YAW] %= 2 * np.pi
-        mask = np.abs(sub[UKFState.YAW]) > np.pi
-        sub[UKFState.YAW, mask] -= (np.pi * 2)
+        normalize(sub, UKFState.YAW)
 
         return np.matmul(self.WEIGHTS * sub, sub.T)
 
@@ -119,12 +115,4 @@ class StatePredictor:
         self.sigma = self.predict_sigma(augmented_sigma, dt)
         self.x = self.predict_x(self.sigma)
 
-        self.x[UKFState.YAW] %= (2 * np.pi)
-        if self.x[UKFState.YAW] > np.pi:
-            self.x[UKFState.YAW] -= (2 * np.pi)
-
         self.P = self.predict_P(self.sigma, self.x)
-
-        self.P[UKFState.YAW] %= 2 * np.pi
-        mask = np.abs(self.P[UKFState.YAW]) > np.pi
-        self.P[UKFState.YAW, mask] -= (np.pi * 2)

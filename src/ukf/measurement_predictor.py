@@ -2,6 +2,7 @@ import numpy as np
 
 from datapoint import DataType
 from state import UKFState
+from util import normalize
 
 class MeasurementPredictor:
     def __init__(self, sensor_std, N_SIGMA, WEIGHTS):
@@ -76,17 +77,14 @@ class MeasurementPredictor:
     def compute_S(self, sigma, z):
         sub = np.subtract(sigma.T, z).T
 
+        normalize(sub, UKFState.YAW)
+
         return (np.matmul(self.WEIGHTS * sub, sub.T)) + self.R
 
     def process(self, sigma_x, data):
         self.initialize(data)
         self.sigma_z = self.compute_sigma_z(sigma_x)
         self.z = self.compute_z(self.sigma_z)
-
-        if self.current_type == DataType.ODOMETRY:
-            self.z[UKFState.YAW] %= (2 * np.pi)
-            if self.z[UKFState.YAW] > np.pi:
-                self.z[UKFState.YAW] -= (2 * np.pi)
 
         self.S = self.compute_S(self.sigma_z, self.z)
 
