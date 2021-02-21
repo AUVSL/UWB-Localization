@@ -27,8 +27,8 @@ class StatePredictor:
         augmented_P[self.NX, self.NX] = self.VAR_SPEED_NOISE
         augmented_P[self.NX + 1, self.NX + 1] = self.VAR_YAW_RATE_NOISE
 
-        # L = np.linalg.cholesky(augmented_P)
-        L = sqrtm(augmented_P)
+        L = np.linalg.cholesky(augmented_P)
+        # L = sqrtm(augmented_P)
         augmented_sigma = np.repeat(augmented_x[None], self.N_SIGMA, axis=0).T
 
         scaled_L = self.SCALE * L
