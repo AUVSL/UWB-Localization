@@ -40,3 +40,5 @@ class StateUpdater:
     def process(self, predicted_x, predicted_z, z, S, predicted_P, sigma_x, sigma_z, data_type):
         Tc = self.compute_Tc(predicted_x, predicted_z, sigma_x, sigma_z)
         self.update(z, S, Tc, predicted_z, predicted_x, predicted_P, data_type)
+
+        normalize(self.x , UKFState.YAW)
