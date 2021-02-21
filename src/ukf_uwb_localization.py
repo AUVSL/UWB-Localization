@@ -49,7 +49,14 @@ class UKFUWBLocalization:
 
         rate = rospy.Rate(10.0)
 
+        default = {
+            1: np.array([0, 0.162, 0.184]),
+            0: np.array([0, -0.162, 0.184])
+        }
+
         for tag in tags:
+            timeout = 5
+
             while not rospy.is_shutdown():
                 try:
                     (trans,rot) = listener.lookupTransform(base_link, tag, rospy.Time(0))
@@ -57,7 +64,11 @@ class UKFUWBLocalization:
                     break
 
                 except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-                    continue
+                    if timeout <= 0:
+                        transforms[tags[tag]] = default[tags[tag]]
+                        break
+                    timeout -= 1
+
 
                 rate.sleep()
 
