@@ -36,7 +36,9 @@ class MeasurementPredictor:
         s = np.sin(angle)
         c = np.cos(angle)
 
-        return [[c, -s], [s, c]]
+        return [[c, -s, 0], 
+                [s, c, 0], 
+                [0, 0, 1]]
 
     def compute_sigma_z(self, sigma_x):
         sigma = np.zeros((self.nz, self.N_SIGMA))
@@ -45,25 +47,26 @@ class MeasurementPredictor:
             sigma[0] = sigma_x[0]  # px
             sigma[1] = sigma_x[1]  # py
         elif self.current_type == DataType.UWB:
-            sensor_pose = sigma_x[:2]
+            sensor_pose = sigma_x[:3]
 
             if self.sensor_offset is not None:
-                angles = np.unique(sigma_x[3])
+                angles = np.unique(sigma_x[4])
 
                 for angle in angles:
                     rot = self.rotation_matrix(angle)
                     offset_rot = np.matmul(rot, self.sensor_offset).reshape((-1, 1))
 
-                    sensor_pose[:, sigma_x[3] == angle] += offset_rot
+                    sensor_pose[:, sigma_x[4] == angle] += offset_rot
 
             distances = np.linalg.norm(sensor_pose - self.anchor_pos.reshape((-1, 1)), axis=0)
             sigma[0] = distances
         elif self.current_type == DataType.ODOMETRY:
             sigma[0] = sigma_x[0] #px
             sigma[1] = sigma_x[1] #py
-            sigma[2] = sigma_x[2] #v
-            sigma[3] = sigma_x[3] #theta
-            sigma[4] = sigma_x[4] #theta_yaw
+            sigma[2] = sigma_x[2] #pz
+            sigma[3] = sigma_x[3] #v
+            sigma[4] = sigma_x[4] #theta
+            sigma[5] = sigma_x[5] #theta_yaw
 
         return sigma
 
@@ -81,9 +84,9 @@ class MeasurementPredictor:
         self.z = self.compute_z(self.sigma_z)
 
         if self.current_type == DataType.ODOMETRY:
-            self.z[3] %= (2 * np.pi)
-            if self.z[3] > np.pi:
-                self.z[3] -= (2 * np.pi)
+            self.z[4] %= (2 * np.pi)
+            if self.z[4] > np.pi:
+                self.z[4] -= (2 * np.pi)
 
         self.S = self.compute_S(self.sigma_z, self.z)
 

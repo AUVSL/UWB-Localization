@@ -10,8 +10,8 @@ class FusionUKF:
     def __init__(self, sensor_std, speed_noise_std=.9, yaw_rate_noise_std=.6, alpha=1, beta=0):
         self.initialized = False
 
-        # Number of total states X, Y, velocity, yaw, yaw rate
-        self.NX = 5
+        # Number of total states X, Y, Z, velocity, yaw, yaw rate
+        self.NX = 6
 
         # Settings values -----------------------------------
         self.N_AUGMENTED = self.NX + 2

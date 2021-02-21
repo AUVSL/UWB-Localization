@@ -11,7 +11,7 @@ import tf
 from tf.transformations import euler_from_quaternion, euler_from_quaternion 
 
 class UKFUWBLocalization:
-    def __init__(self, uwb_std=1, odometry_std=[2.25822393,2.25822393,2.47367648,5.10093492e-03,3.16227634e-03], accel_std=1, yaw_accel_std=1, alpha=1):
+    def __init__(self, uwb_std=1, odometry_std=[2.25822393,2.25822393, 2.25822393,2.47367648,5.10093492e-03,3.16227634e-03], accel_std=1, yaw_accel_std=1, alpha=1):
         sensor_std = {
             DataType.UWB: {
                 'std': [uwb_std],
@@ -19,7 +19,7 @@ class UKFUWBLocalization:
             },
             DataType.ODOMETRY: {
                 'std' : odometry_std,
-                'nz': 5
+                'nz': 6
             }
         }
 
@@ -66,6 +66,7 @@ class UKFUWBLocalization:
     def add_odometry(self, msg):
         px = msg.pose.pose.position.x
         py = msg.pose.pose.position.y
+        pz = msg.pose.pose.position.z
 
         v = msg.twist.twist.linear.x
         theta = euler_from_quaternion((
@@ -75,14 +76,9 @@ class UKFUWBLocalization:
             msg.pose.pose.orientation.w
         ))[2]
 
-        if theta < 0:
-            theta += (np.pi * 2)
-
-        print theta, self.ukf.x[3]
-
         theta_yaw = msg.twist.twist.angular.z
 
-        data = DataPoint(DataType.ODOMETRY, np.array([px, py, v, theta, theta_yaw]), rospy.get_time())
+        data = DataPoint(DataType.ODOMETRY, np.array([px, py, pz, v, theta, theta_yaw]), rospy.get_time())
 
         self.ukf.update(data)
 
@@ -90,7 +86,7 @@ class UKFUWBLocalization:
         # type: (MarkerArray) -> None
 
         for marker in msg.markers:
-            self.anchor_poses[marker.id] = np.array([marker.pose.position.x,marker.pose.position.y]) 
+            self.anchor_poses[marker.id] = np.array([marker.pose.position.x,marker.pose.position.y, marker.pose.position.z]) 
 
     def add_ranging(self, msg):
         # type: (Ranging) -> None
@@ -114,10 +110,11 @@ class UKFUWBLocalization:
         rate = rospy.Rate(30)
 
         while not rospy.is_shutdown():
-            x, y, v, yaw, yaw_rate = self.ukf.x
+            x, y,z, v, yaw, yaw_rate = self.ukf.x
 
             self.odom.pose.pose.position.x = x
             self.odom.pose.pose.position.y = y
+            self.odom.pose.pose.position.z = z
             self.odom.twist.twist.linear.x = v
             self.odom.twist.twist.angular.z = yaw_rate
 
@@ -129,7 +126,7 @@ if __name__ == "__main__":
     rospy.init_node("ukf_uwb_localization_kalman")
 
     intial_pose = rospy.wait_for_message('/ground_truth/state', Odometry)
-    x, y = intial_pose.pose.pose.position.x, intial_pose.pose.pose.position.y
+    x, y, z = intial_pose.pose.pose.position.x, intial_pose.pose.pose.position.y, intial_pose.pose.pose.position.z
     v = intial_pose.twist.twist.linear.x
     theta = euler_from_quaternion((
         intial_pose.pose.pose.orientation.x,
@@ -141,8 +138,8 @@ if __name__ == "__main__":
     print x, y, v, theta
 
 
-    loc = UKFUWBLocalization(alpha=0.5)
-    loc.intialize(np.array([x, y, v, theta ]), np.eye(5) * 1)
+    loc = UKFUWBLocalization(alpha=1)
+    loc.intialize(np.array([x, y, z, abs(v), theta ]), np.eye(6) * 1))
 
     loc.run()
 

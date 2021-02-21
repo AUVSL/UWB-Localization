@@ -43,11 +43,12 @@ class StatePredictor:
 
         px = augmented_sigma[0]
         py = augmented_sigma[1]
-        speed = augmented_sigma[2]
-        yaw = augmented_sigma[3]
-        yaw_rate = augmented_sigma[4]
-        speed_noise = augmented_sigma[5]
-        yaw_rate_noise = augmented_sigma[6]
+        pz = augmented_sigma[2]
+        speed = augmented_sigma[3]
+        yaw = augmented_sigma[4]
+        yaw_rate = augmented_sigma[5]
+        speed_noise = augmented_sigma[6]
+        yaw_rate_noise = augmented_sigma[7]
 
         # PREDICT NEXT STEP USING CTRV Model
 
@@ -88,9 +89,10 @@ class StatePredictor:
 
         predicted_sigma[0] = p_px
         predicted_sigma[1] = p_py
-        predicted_sigma[2] = p_speed
-        predicted_sigma[3] = p_yaw
-        predicted_sigma[4] = p_yaw_rate
+        predicted_sigma[2] = pz
+        predicted_sigma[3] = p_speed
+        predicted_sigma[4] = p_yaw
+        predicted_sigma[5] = p_yaw_rate
 
         # ------------------
 
@@ -105,9 +107,9 @@ class StatePredictor:
     def predict_P(self, predicted_sigma, predicted_x):
         sub = np.subtract(predicted_sigma.T, predicted_x).T
 
-        sub[3] %= 2 * np.pi
-        mask = np.abs(sub[3]) > np.pi
-        sub[3, mask] -= (np.pi * 2)
+        sub[4] %= 2 * np.pi
+        mask = np.abs(sub[4]) > np.pi
+        sub[4, mask] -= (np.pi * 2)
 
         return np.matmul(self.WEIGHTS * sub, sub.T)
 
@@ -116,12 +118,12 @@ class StatePredictor:
         self.sigma = self.predict_sigma(augmented_sigma, dt)
         self.x = self.predict_x(self.sigma)
 
-        self.x[3] %= (2 * np.pi)
-        if self.x[3] > np.pi:
-            self.x[3] -= (2 * np.pi)
+        self.x[4] %= (2 * np.pi)
+        if self.x[4] > np.pi:
+            self.x[4] -= (2 * np.pi)
 
         self.P = self.predict_P(self.sigma, self.x)
 
-        self.P[3] %= 2 * np.pi
-        mask = np.abs(self.P[3]) > np.pi
-        self.P[3, mask] -= (np.pi * 2)
+        self.P[4] %= 2 * np.pi
+        mask = np.abs(self.P[4]) > np.pi
+        self.P[4, mask] -= (np.pi * 2)
