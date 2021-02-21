@@ -71,9 +71,6 @@ class FusionUKF:
     def process(self, data):
         dt = data.timestamp - self.timestamp  # seconds
 
-        if(dt < 0.001):
-            dt = 0.001
-
         # STATE PREDICTION
         # get predicted state and covariance of predicted state, predicted sigma points in state space
         self.state_predictor.process(self.x, self.P, dt)

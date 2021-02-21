@@ -78,6 +78,9 @@ class UKFUWBLocalization:
         return transforms
 
     def add_odometry(self, msg):
+        t = self.get_time()
+
+
         px = msg.pose.pose.position.x
         py = msg.pose.pose.position.y
         pz = msg.pose.pose.position.z
@@ -92,7 +95,7 @@ class UKFUWBLocalization:
 
         theta_yaw = msg.twist.twist.angular.z
 
-        data = DataPoint(DataType.ODOMETRY, np.array([px, py, pz, v, theta, theta_yaw]), rospy.get_time())
+        data = DataPoint(DataType.ODOMETRY, np.array([px, py, pz, v, theta, theta_yaw]), t)
 
         self.ukf.update(data)
 
@@ -102,14 +105,20 @@ class UKFUWBLocalization:
         for marker in msg.markers:
             self.anchor_poses[marker.id] = np.array([marker.pose.position.x,marker.pose.position.y, marker.pose.position.z]) 
 
+    def get_time(self):
+        t = rospy.Time.now()
+
+        return t.secs + t.nsecs / 1e9
+
     def add_ranging(self, msg):
         # type: (Ranging) -> None
+        t = self.get_time()
 
         if msg.anchorId in self.anchor_poses:
             anchor_pose = self.anchor_poses[msg.anchorId]
             anchor_distance = msg.range / 1000.
 
-            data = DataPoint(DataType.UWB, anchor_distance, rospy.get_time(), extra={
+            data = DataPoint(DataType.UWB, anchor_distance, t, extra={
                 "anchor": anchor_pose,
                 'sensor_offset': self.tag_offset[msg.tagId]
                 # 'sensor_offset': None
@@ -118,7 +127,9 @@ class UKFUWBLocalization:
             self.ukf.update(data)
 
     def intialize(self, x, P):
-        self.ukf.initialize(x, P, rospy.get_time())
+        t = self.get_time()
+
+        self.ukf.initialize(x, P, t)
 
     def run(self):
         rate = rospy.Rate(30)
