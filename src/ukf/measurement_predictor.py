@@ -1,7 +1,7 @@
 import numpy as np
 
 from datapoint import DataType
-
+from state import UKFState
 
 class MeasurementPredictor:
     def __init__(self, sensor_std, N_SIGMA, WEIGHTS):
@@ -44,29 +44,29 @@ class MeasurementPredictor:
         sigma = np.zeros((self.nz, self.N_SIGMA))
 
         if self.current_type == DataType.LIDAR:
-            sigma[0] = sigma_x[0]  # px
-            sigma[1] = sigma_x[1]  # py
+            sigma[UKFState.X] = sigma_x[UKFState.X]  # px
+            sigma[UKFState.Y] = sigma_x[UKFState.Y]  # py
         elif self.current_type == DataType.UWB:
-            sensor_pose = sigma_x[:3]
+            sensor_pose = sigma_x[:UKFState.Z]
 
             if self.sensor_offset is not None:
-                angles = np.unique(sigma_x[4])
+                angles = np.unique(sigma_x[UKFState.YAW])
 
                 for angle in angles:
                     rot = self.rotation_matrix(angle)
                     offset_rot = np.matmul(rot, self.sensor_offset).reshape((-1, 1))
 
-                    sensor_pose[:, sigma_x[4] == angle] += offset_rot
+                    sensor_pose[:, sigma_x[UKFState.YAW] == angle] += offset_rot
 
             distances = np.linalg.norm(sensor_pose - self.anchor_pos.reshape((-1, 1)), axis=0)
             sigma[0] = distances
         elif self.current_type == DataType.ODOMETRY:
-            sigma[0] = sigma_x[0] #px
-            sigma[1] = sigma_x[1] #py
-            sigma[2] = sigma_x[2] #pz
-            sigma[3] = sigma_x[3] #v
-            sigma[4] = sigma_x[4] #theta
-            sigma[5] = sigma_x[5] #theta_yaw
+            sigma[UKFState.X] = sigma_x[UKFState.X] #px
+            sigma[UKFState.Y] = sigma_x[UKFState.Y] #py
+            sigma[UKFState.Z] = sigma_x[UKFState.Z] #pz
+            sigma[UKFState.V] = sigma_x[UKFState.V] #v
+            sigma[UKFState.YAW] = sigma_x[UKFState.YAW] #theta
+            sigma[UKFState.YAW_RATE] = sigma_x[UKFState.YAW_RATE] #theta_yaw
 
         return sigma
 
@@ -84,9 +84,9 @@ class MeasurementPredictor:
         self.z = self.compute_z(self.sigma_z)
 
         if self.current_type == DataType.ODOMETRY:
-            self.z[4] %= (2 * np.pi)
-            if self.z[4] > np.pi:
-                self.z[4] -= (2 * np.pi)
+            self.z[UKFState.YAW] %= (2 * np.pi)
+            if self.z[UKFState.YAW] > np.pi:
+                self.z[UKFState.YAW] -= (2 * np.pi)
 
         self.S = self.compute_S(self.sigma_z, self.z)
 
