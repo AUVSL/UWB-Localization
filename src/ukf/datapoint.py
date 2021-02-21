@@ -2,6 +2,7 @@ class DataType:
     LIDAR = 1
     ODOMETRY = 2
     UWB = 3
+    GROUND_TRUTH = 0
 
 
 class DataPoint:
