@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
 
     loc = UKFUWBLocalization(alpha=1)
-    loc.intialize(np.array([x, y, z, abs(v), theta ]), np.eye(6) * 1))
+    loc.intialize(np.array([x, y, z, abs(v), theta ]), np.eye(6) * 1)
 
     loc.run()
 
