@@ -106,9 +106,7 @@ class UKFUWBLocalization:
             self.anchor_poses[marker.id] = np.array([marker.pose.position.x,marker.pose.position.y, marker.pose.position.z]) 
 
     def get_time(self):
-        t = rospy.Time.now()
-
-        return t.secs + t.nsecs / 1e9
+        return rospy.Time.now().to_nsec()
 
     def add_ranging(self, msg):
         # type: (Ranging) -> None
