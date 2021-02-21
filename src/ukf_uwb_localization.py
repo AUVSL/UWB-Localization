@@ -141,7 +141,7 @@ if __name__ == "__main__":
 
     intial_pose = rospy.wait_for_message('/ground_truth/state', Odometry)
     x, y, z = intial_pose.pose.pose.position.x, intial_pose.pose.pose.position.y, intial_pose.pose.pose.position.z
-    v = intial_pose.twist.twist.linear.x
+    v = 0.2
     theta = euler_from_quaternion((
         intial_pose.pose.pose.orientation.x,
         intial_pose.pose.pose.orientation.y,
