@@ -8,6 +8,9 @@ from state_updater import StateUpdater
 
 class FusionUKF:
     def __init__(self, sensor_std, speed_noise_std=.9, yaw_rate_noise_std=.6, alpha=1, beta=0):
+        # ODOMETRY: beta=0.3
+        # UWB: beta=0.3
+        
         self.initialized = False
 
         # Number of total states X, Y, Z, velocity, yaw, yaw rate

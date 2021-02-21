@@ -26,9 +26,12 @@ class UKFUWBLocalization:
         self.ukf = FusionUKF(sensor_std, accel_std, yaw_accel_std, alpha)
 
         self.anchor_poses = dict()
-        self.tag_offset = self.retrieve_tag_offsets({"left_tag":1, "right_tag":0})
-
-        print(self.tag_offset)
+        # self.tag_offset = self.retrieve_tag_offsets({"left_tag":1, "right_tag":0})
+        self.tag_offset = {
+            1:np.array([0, 0.162, 0.184]),
+            0:np.array([0, -0.162, 0.184])
+        }
+        # print(self.tag_offset)
 
         anchors = '/gtec/toa/anchors'
         toa_ranging = '/gtec/toa/ranging'
@@ -150,7 +153,7 @@ if __name__ == "__main__":
 
 
     loc = UKFUWBLocalization(alpha=1)
-    loc.intialize(np.array([x, y, z, abs(v), theta ]), np.eye(6) * 1)
+    loc.intialize(np.array([x, y, z, v, theta ]), np.diag([1, 1, 1, 1, 1,1]))
 
     loc.run()
 
