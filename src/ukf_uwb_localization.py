@@ -54,9 +54,11 @@ class UKFUWBLocalization:
 
         rate = rospy.Rate(10.0)
 
+        # right: 0
+        # left: 1
         default = {
-            1: np.array([0, 0.162, 0.184]),
-            0: np.array([0, -0.162, 0.184])
+            0: np.array([0, -0.162, 0.184]),
+            1: np.array([0, 0.162, 0.184])
         }
 
         for tag in tags:
@@ -65,7 +67,7 @@ class UKFUWBLocalization:
             while not rospy.is_shutdown():
                 try:
                     (trans,rot) = listener.lookupTransform(base_link, tag, rospy.Time(0))
-                    transforms[tags[tag]] = np.array([trans[0], trans[1]])
+                    transforms[tags[tag]] = np.array([trans[0], trans[1], trans[2]])
                     break
 
                 except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
