@@ -11,7 +11,7 @@ import tf
 from tf.transformations import euler_from_quaternion, euler_from_quaternion 
 
 class UKFUWBLocalization:
-    def __init__(self, uwb_std=1, odometry_std=[2.25822393,2.25822393, 2.25822393,2.47367648,5.10093492e-03,3.16227634e-03], accel_std=1, yaw_accel_std=1, alpha=1):
+    def __init__(self, uwb_std=1, odometry_std=(1,1,1,1,1,1), accel_std=1, yaw_accel_std=1, alpha=1, beta=0):
         sensor_std = {
             DataType.UWB: {
                 'std': [uwb_std],
@@ -23,7 +23,7 @@ class UKFUWBLocalization:
             }
         }
 
-        self.ukf = FusionUKF(sensor_std, accel_std, yaw_accel_std, alpha)
+        self.ukf = FusionUKF(sensor_std, accel_std, yaw_accel_std, alpha, beta)
 
         self.anchor_poses = dict()
         # self.tag_offset = self.retrieve_tag_offsets({"left_tag":1, "right_tag":0})
@@ -160,9 +160,11 @@ if __name__ == "__main__":
 
     print x, y, v, theta
 
+    p = [9.0001, 13.0, 10.0001, 16.9001, 3.0001, 1.0001, 2.0001, 4.9001, 6.9001, 1.0, 0, 0.0001, 0.0001, 0.0001, 2.0001, 0.0001, 0.0001]
 
-    loc = UKFUWBLocalization(alpha=1)
-    loc.intialize(np.array([x, y, z, v, theta ]), np.diag([1, 1, 1, 1, 1,1]))
+
+    loc = UKFUWBLocalization(p[0], p[1:7], accel_std=p[7], yaw_accel_std=p[8], alpha=p[9], beta=p[10])
+    loc.intialize(np.array([x, y, z, v, theta ]), np.diag(p[11:17]))
 
     loc.run()
 
