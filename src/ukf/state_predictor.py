@@ -1,7 +1,7 @@
 import numpy as np
-from scipy.linalg import sqrtm
-from state import UKFState
-from util import normalize
+
+from ukf.state import UKFState
+from ukf.util import normalize
 
 
 class StatePredictor:
@@ -30,7 +30,6 @@ class StatePredictor:
         augmented_P[self.NX + 1, self.NX + 1] = self.VAR_YAW_RATE_NOISE
 
         L = np.linalg.cholesky(augmented_P)
-        # L = sqrtm(augmented_P)
         augmented_sigma = np.repeat(augmented_x[None], self.N_SIGMA, axis=0).T
 
         scaled_L = self.SCALE * L

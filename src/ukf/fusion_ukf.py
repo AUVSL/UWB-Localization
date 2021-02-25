@@ -1,16 +1,15 @@
 import numpy as np
 
-from datapoint import DataPoint
-from measurement_predictor import MeasurementPredictor
-from state_predictor import StatePredictor
-from state_updater import StateUpdater
+from ukf.measurement_predictor import MeasurementPredictor
+from ukf.state_predictor import StatePredictor
+from ukf.state_updater import StateUpdater
 
 
 class FusionUKF:
     def __init__(self, sensor_std, speed_noise_std=.9, yaw_rate_noise_std=.6, alpha=1, beta=0):
         # ODOMETRY: beta=0.3
         # UWB: beta=0.3
-        
+
         self.initialized = False
 
         # Number of total states X, Y, Z, velocity, yaw, yaw rate
@@ -20,10 +19,10 @@ class FusionUKF:
         self.N_AUGMENTED = self.NX + 2
         self.N_SIGMA = self.N_AUGMENTED * 2 + 1
         self.ALPHA = alpha
-        self.LAMBDA =  (self.ALPHA ** 2) *  (self.NX + 3 - self.N_AUGMENTED) - self.NX
+        self.LAMBDA = (self.ALPHA ** 2) * (self.NX + 3 - self.N_AUGMENTED) - self.NX
         self.SCALE = np.sqrt(self.LAMBDA + self.N_AUGMENTED)
         self.W = 0.5 / (self.LAMBDA + self.N_AUGMENTED)
-        self.W0 = self.LAMBDA / (self.LAMBDA + self.N_AUGMENTED) + ( 1 - alpha ** 2 + beta)
+        self.W0 = self.LAMBDA / (self.LAMBDA + self.N_AUGMENTED) + (1 - alpha ** 2 + beta)
 
         self.WEIGHTS = np.full(self.N_SIGMA, self.W)
         self.WEIGHTS[0] = self.W0
@@ -70,6 +69,10 @@ class FusionUKF:
 
     def process(self, data):
         dt = (data.timestamp - self.timestamp) / 1e9  # seconds
+        # dt = (data.timestamp - self.timestamp)  # seconds
+
+        if dt < 0.0001:
+            dt = 0.0001
 
         # STATE PREDICTION
         # get predicted state and covariance of predicted state, predicted sigma points in state space
@@ -87,7 +90,8 @@ class FusionUKF:
 
         # STATE UPDATE
         # updated the state and covariance of state... also get the nis
-        self.state_updater.process(self.x, predicted_z, data.measurement_data, S, self.P, sigma_x, sigma_z, data.data_type)
+        self.state_updater.process(self.x, predicted_z, data.measurement_data, S, self.P, sigma_x, sigma_z,
+                                   data.data_type)
         self.x = self.state_updater.x
         self.P = self.state_updater.P
         self.nis = self.state_updater.nis

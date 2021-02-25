@@ -1,7 +1,9 @@
 import numpy as np
-from datapoint import DataType
-from state import UKFState
-from util import normalize
+
+from ukf.datapoint import DataType
+from ukf.state import UKFState
+from ukf.util import normalize
+
 
 class StateUpdater:
     def __init__(self, NX, N_SIGMA, WEIGHTS):
@@ -26,11 +28,11 @@ class StateUpdater:
 
         dz = z - predicted_z
 
-        if(data_type == DataType.ODOMETRY):
+        if (data_type == DataType.ODOMETRY):
             normalize(dz, UKFState.YAW)
 
             # print(z[UKFState.YAW], predicted_z[UKFState.YAW], dz[UKFState.YAW])
-            
+
         # Dm = np.sqrt(np.matmul(np.matmul(dz, Si), dz))
 
         self.x = predicted_x + np.matmul(K, dz)
@@ -41,4 +43,4 @@ class StateUpdater:
         Tc = self.compute_Tc(predicted_x, predicted_z, sigma_x, sigma_z)
         self.update(z, S, Tc, predicted_z, predicted_x, predicted_P, data_type)
 
-        normalize(self.x , UKFState.YAW)
+        normalize(self.x, UKFState.YAW)

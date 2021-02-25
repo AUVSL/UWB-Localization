@@ -1,8 +1,9 @@
 import numpy as np
 
-from datapoint import DataType
-from state import UKFState
-from util import normalize
+from ukf.datapoint import DataType
+from ukf.state import UKFState
+from ukf.util import normalize
+
 
 class MeasurementPredictor:
     def __init__(self, sensor_std, N_SIGMA, WEIGHTS):
@@ -37,8 +38,8 @@ class MeasurementPredictor:
         s = np.sin(angle)
         c = np.cos(angle)
 
-        return [[c, -s, 0], 
-                [s, c, 0], 
+        return [[c, -s, 0],
+                [s, c, 0],
                 [0, 0, 1]]
 
     def compute_sigma_z(self, sigma_x):
@@ -48,7 +49,7 @@ class MeasurementPredictor:
             sigma[UKFState.X] = sigma_x[UKFState.X]  # px
             sigma[UKFState.Y] = sigma_x[UKFState.Y]  # py
         elif self.current_type == DataType.UWB:
-            sensor_pose = sigma_x[:UKFState.Z]
+            sensor_pose = np.copy(sigma_x[:UKFState.Z + 1])
 
             if self.sensor_offset is not None:
                 angles = np.unique(sigma_x[UKFState.YAW])
@@ -62,12 +63,12 @@ class MeasurementPredictor:
             distances = np.linalg.norm(sensor_pose - self.anchor_pos.reshape((-1, 1)), axis=0)
             sigma[0] = distances
         elif self.current_type == DataType.ODOMETRY:
-            sigma[UKFState.X] = sigma_x[UKFState.X] #px
-            sigma[UKFState.Y] = sigma_x[UKFState.Y] #py
-            sigma[UKFState.Z] = sigma_x[UKFState.Z] #pz
-            sigma[UKFState.V] = sigma_x[UKFState.V] #v
-            sigma[UKFState.YAW] = sigma_x[UKFState.YAW] #theta
-            sigma[UKFState.YAW_RATE] = sigma_x[UKFState.YAW_RATE] #theta_yaw
+            sigma[UKFState.X] = sigma_x[UKFState.X]  # px
+            sigma[UKFState.Y] = sigma_x[UKFState.Y]  # py
+            sigma[UKFState.Z] = sigma_x[UKFState.Z]  # pz
+            sigma[UKFState.V] = sigma_x[UKFState.V]  # v
+            sigma[UKFState.YAW] = sigma_x[UKFState.YAW]  # theta
+            sigma[UKFState.YAW_RATE] = sigma_x[UKFState.YAW_RATE]  # theta_yaw
 
         return sigma
 
@@ -77,7 +78,8 @@ class MeasurementPredictor:
     def compute_S(self, sigma, z):
         sub = np.subtract(sigma.T, z).T
 
-        normalize(sub, UKFState.YAW)
+        if self.current_type == DataType.ODOMETRY:
+            normalize(sub, UKFState.YAW)
 
         return (np.matmul(self.WEIGHTS * sub, sub.T)) + self.R
 
@@ -85,7 +87,6 @@ class MeasurementPredictor:
         self.initialize(data)
         self.sigma_z = self.compute_sigma_z(sigma_x)
         self.z = self.compute_z(self.sigma_z)
-
         self.S = self.compute_S(self.sigma_z, self.z)
 
     def compute_R_matrix(self):
