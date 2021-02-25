@@ -45,6 +45,8 @@ class UKFUWBLocalization:
         self.estimated_pose = rospy.Publisher(publish_odom, Odometry, queue_size=1)
         self.odom = Odometry()
 
+        self.sensor_data = []
+
     def retrieve_tag_offsets(self, tags, base_link='base_link'):
         transforms = dict() 
 
@@ -97,7 +99,7 @@ class UKFUWBLocalization:
 
         data = DataPoint(DataType.ODOMETRY, np.array([px, py, pz, v, theta, theta_yaw]), t)
 
-        self.ukf.update(data)
+        self.sensor_data.append(data)
 
     def add_anchors(self, msg):
         # type: (MarkerArray) -> None
@@ -122,7 +124,7 @@ class UKFUWBLocalization:
                 # 'sensor_offset': None
             })
 
-            self.ukf.update(data)
+            self.sensor_data.append(data)
 
     def intialize(self, x, P):
         t = self.get_time()
@@ -130,9 +132,19 @@ class UKFUWBLocalization:
         self.ukf.initialize(x, P, t)
 
     def run(self):
-        rate = rospy.Rate(30)
+        rate = rospy.Rate(60)
 
         while not rospy.is_shutdown():
+
+            # start_t = self.get_time()
+            for data in self.sensor_data:
+                self.ukf.update(data)
+            # delta_t = (self.get_time() - start_t) / 1e9
+            # print(len(self.sensor_data), delta_t)
+
+            del self.sensor_data[:]
+
+
             x, y,z, v, yaw, yaw_rate = self.ukf.x
 
             self.odom.pose.pose.position.x = x
