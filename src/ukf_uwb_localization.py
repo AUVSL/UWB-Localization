@@ -225,7 +225,7 @@ class UKFUWBLocalization:
                         'dist': s.measurement_data
                     })
 
-            if len(uwb) > 30:
+            if len(uwb) > 3:
                 res = least_squares(self.func, [0,0,0,0], args=(d, uwb))
 
                 # print(res)
