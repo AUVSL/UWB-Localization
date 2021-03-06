@@ -30,10 +30,14 @@ class UKFUWBLocalization:
             }
         }
 
+        self.namespace = namespace 
+        self.right_tag = right_tag
+        self.left_tag = left_tag
+
         self.ukf = FusionUKF(sensor_std, accel_std, yaw_accel_std, alpha, beta)
 
         self.anchor_poses = dict()
-        self.tag_offset = self.retrieve_tag_offsets({"left_tag":left_tag, "right_tag":right_tag}, namespace=namespace, right_tag=right_tag, left_tag=left_tag)
+        self.tag_offset = self.retrieve_tag_offsets({namespace+"left_tag":left_tag, namespace+"right_tag":right_tag}, namespace=namespace, right_tag=right_tag, left_tag=left_tag)
 
         # right: 0
         # left: 1
@@ -50,8 +54,8 @@ class UKFUWBLocalization:
             publish_odom = '/jackal/uwb/odom'
             odometry = '/odometry/filtered'
         else:
-            publish_odom = '/' + namespace + '/uwb/odom'
-            odometry =  '/' + namespace + '/odometry/filtered'
+            publish_odom = namespace + 'uwb/odom'
+            odometry =  namespace + 'odometry/filtered'
 
         anchors_sub = rospy.Subscriber(anchors, MarkerArray, callback=self.add_anchors)
         ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
@@ -82,13 +86,10 @@ class UKFUWBLocalization:
         }
 
         if namespace is not None:
-            base_link = namespace + '/' + base_link
+            base_link = namespace + base_link
 
         for tag in tags:
             timeout = 5
-
-            if namespace is not None:
-                tag = namespace + '/' + tag
 
             while not rospy.is_shutdown():
                 try:
@@ -213,7 +214,7 @@ class UKFUWBLocalization:
 
             z = tag[2]
 
-            if np.all(tag == self.tag_offset[1]):
+            if np.all(tag == self.tag_offset[self.left_tag]):
                 x = x1
                 y = y1
             else:
@@ -229,7 +230,7 @@ class UKFUWBLocalization:
         delay = 1 #s
         rate = rospy.Rate(delay)
 
-        d = np.linalg.norm(self.tag_offset[0] - self.tag_offset[1])
+        d = np.linalg.norm(self.tag_offset[self.right_tag] - self.tag_offset[self.left_tag])
 
         while not rospy.is_shutdown() and not self.initialized:
             rate.sleep()
@@ -297,7 +298,7 @@ if __name__ == "__main__":
     right_tag, left_tag = get_tag_ids()
 
     
-    intial_pose = rospy.wait_for_message('/ground_truth/state', Odometry)
+    intial_pose = rospy.wait_for_message(ns + 'ground_truth/state', Odometry)
     x, y, z = intial_pose.pose.pose.position.x, intial_pose.pose.pose.position.y, intial_pose.pose.pose.position.z
     v = 0.2
     theta = euler_from_quaternion((
