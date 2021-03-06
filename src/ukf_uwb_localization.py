@@ -12,7 +12,7 @@ from tf.transformations import euler_from_quaternion, euler_from_quaternion
 from scipy.optimize import least_squares
 
 class UKFUWBLocalization:
-    def __init__(self, uwb_std=1, odometry_std=(1,1,1,1,1,1), accel_std=1, yaw_accel_std=1, alpha=1, beta=0):
+    def __init__(self, uwb_std=1, odometry_std=(1,1,1,1,1,1), accel_std=1, yaw_accel_std=1, alpha=1, beta=0, namespace=None, right_tag=0, left_tag=1):
         sensor_std = {
             DataType.UWB: {
                 'std': [uwb_std],
@@ -27,7 +27,7 @@ class UKFUWBLocalization:
         self.ukf = FusionUKF(sensor_std, accel_std, yaw_accel_std, alpha, beta)
 
         self.anchor_poses = dict()
-        self.tag_offset = self.retrieve_tag_offsets({"left_tag":1, "right_tag":0})
+        self.tag_offset = self.retrieve_tag_offsets({"left_tag":left_tag, "right_tag":right_tag}, namespace=namespace, right_tag=right_tag, left_tag=left_tag)
 
         # right: 0
         # left: 1
@@ -40,12 +40,18 @@ class UKFUWBLocalization:
         anchors = '/gtec/toa/anchors'
         toa_ranging = '/gtec/toa/ranging'
 
+        if namespace is None:
+            publish_odom = '/jackal/uwb/odom'
+            odometry = '/odometry/filtered'
+        else:
+            publish_odom = '/' + namespace + '/uwb/odom'
+            odometry =  '/' + namespace + '/odometry/filtered'
+
         anchors_sub = rospy.Subscriber(anchors, MarkerArray, callback=self.add_anchors)
         ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
-        odometry = '/odometry/filtered'
         odometry = rospy.Subscriber(odometry, Odometry, callback=self.add_odometry)
 
-        publish_odom = '/jackal/uwb/odom'
+
         self.estimated_pose = rospy.Publisher(publish_odom, Odometry, queue_size=1)
         self.odom = Odometry()
 
@@ -55,7 +61,7 @@ class UKFUWBLocalization:
         self.start_translation = np.zeros(2)
         self.start_rotation = 0
 
-    def retrieve_tag_offsets(self, tags, base_link='base_link'):
+    def retrieve_tag_offsets(self, tags, base_link='base_link', namespace=None, right_tag=0, left_tag=1):
         transforms = dict() 
 
         listener = tf.TransformListener()
@@ -65,12 +71,18 @@ class UKFUWBLocalization:
         # right: 0
         # left: 1
         default = {
-            0: np.array([0, -0.162, 0.184]),
-            1: np.array([0, 0.162, 0.184])
+            right_tag: np.array([0, -0.162, 0.184]),
+            left_tag: np.array([0, 0.162, 0.184])
         }
+
+        if namespace is not None:
+            base_link = namespace + '/' + base_link
 
         for tag in tags:
             timeout = 5
+
+            if namespace is not None:
+                tag = namespace + '/' + tag
 
             while not rospy.is_shutdown():
                 try:
@@ -129,16 +141,17 @@ class UKFUWBLocalization:
         t = self.get_time()
 
         if msg.anchorId in self.anchor_poses:
-            anchor_pose = self.anchor_poses[msg.anchorId]
-            anchor_distance = msg.range / 1000.
+            if msg.tagId in self.tag_offset:
+                anchor_pose = self.anchor_poses[msg.anchorId]
+                anchor_distance = msg.range / 1000.
 
-            data = DataPoint(DataType.UWB, anchor_distance, t, extra={
-                "anchor": anchor_pose,
-                'sensor_offset': self.tag_offset[msg.tagId]
-                # 'sensor_offset': None
-            })
+                data = DataPoint(DataType.UWB, anchor_distance, t, extra={
+                    "anchor": anchor_pose,
+                    'sensor_offset': self.tag_offset[msg.tagId]
+                    # 'sensor_offset': None
+                })
 
-            self.sensor_data.append(data)
+                self.sensor_data.append(data)
 
     def intialize(self, x, P):
         t = self.get_time()
