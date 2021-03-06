@@ -1,0 +1,14 @@
+{
+    "/": {
+        "right_tag": 0,
+        "left_tag": 1
+    },
+    "Jackal1": {
+        "right_tag": 0,
+        "left_tag": 1
+    },
+    "Jackal2": {
+        "right_tag": 2,
+        "left_tag": 3
+    }
+}

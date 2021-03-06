@@ -10,9 +10,15 @@ from gtec_msgs.msg import Ranging
 import tf
 from tf.transformations import euler_from_quaternion, euler_from_quaternion 
 from scipy.optimize import least_squares
+import json
+import rospkg
+import os
 
 class UKFUWBLocalization:
     def __init__(self, uwb_std=1, odometry_std=(1,1,1,1,1,1), accel_std=1, yaw_accel_std=1, alpha=1, beta=0, namespace=None, right_tag=0, left_tag=1):
+        if namespace == '/':
+            namespace = None
+        
         sensor_std = {
             DataType.UWB: {
                 'std': [uwb_std],
@@ -263,9 +269,34 @@ class UKFUWBLocalization:
                 self.intialize(np.array([center[0], center[1], 0, 0, theta, 0 ]), initial_P)
 
 
+def get_tag_ids(tags_file = 'tag_ids.json'):
+    
+    rospack = rospkg.RosPack()
+    package_location = rospack.get_path('uwb_localization')
+    
+    tags_file = os.path.join(package_location, 'src' ,tags_file)
+
+    with open(tags_file, 'r') as f:
+        tag_data = json.load(f)
+
+    print(tag_data)
+    right_tag = tag_data[ns]['right_tag']
+    left_tag = tag_data[ns]['left_tag']
+    print(right_tag, left_tag)
+
+    return right_tag, left_tag
+
+
 if __name__ == "__main__":
     rospy.init_node("ukf_uwb_localization_kalman")
+    
+    ns = rospy.get_namespace()
 
+    print("Namespace:", ns)
+
+    right_tag, left_tag = get_tag_ids()
+
+    
     intial_pose = rospy.wait_for_message('/ground_truth/state', Odometry)
     x, y, z = intial_pose.pose.pose.position.x, intial_pose.pose.pose.position.y, intial_pose.pose.pose.position.z
     v = 0.2
@@ -280,8 +311,7 @@ if __name__ == "__main__":
 
     p = [1.0001, 11.0, 14.0001, 20.9001, 1.0001, 0.0001, 0.0001, 3.9001, 4.9001, 1.0, 0, 0.0001, 0.0001, 0.0001, 2.0001, 0.0001, 0.0001]
 
-
-    loc = UKFUWBLocalization(p[0], p[1:7], accel_std=p[7], yaw_accel_std=p[8], alpha=p[9], beta=p[10])
+    loc = UKFUWBLocalization(p[0], p[1:7], accel_std=p[7], yaw_accel_std=p[8], alpha=p[9], beta=p[10], namespace=ns, right_tag=right_tag, left_tag=left_tag)
     # loc.intialize(np.array([x, y, z, v, theta ]),
         # np.identity(6))
 
