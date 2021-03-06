@@ -16,8 +16,8 @@ import os
 
 class UKFUWBLocalization:
     def __init__(self, uwb_std=1, odometry_std=(1,1,1,1,1,1), accel_std=1, yaw_accel_std=1, alpha=1, beta=0, namespace=None, right_tag=0, left_tag=1):
-        if namespace == '/':
-            namespace = None
+        if namespace is None:
+            namespace = '/'
         
         sensor_std = {
             DataType.UWB: {
