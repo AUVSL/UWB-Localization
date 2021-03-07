@@ -61,8 +61,6 @@ class Recorder:
         for marker in msg.markers:
             self.anchor_poses[marker.id] = [marker.pose.position.x,marker.pose.position.y, marker.pose.position.z] 
 
-        self.anchors_sub.unregister()
-
 
     def get_time(self):
         return rospy.Time.now().to_nsec()
