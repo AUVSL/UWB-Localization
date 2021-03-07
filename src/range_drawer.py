@@ -7,14 +7,20 @@ import rospy
 import matplotlib.pyplot as plt
 from gtec_msgs.msg import Ranging
 from live_plotter import LivePlotter
+import sys
 
 class RangePlotter:
-    def __init__(self, tag_ids=("0", "1"), n=-1):
+    def __init__(self, tags=None, n=-1):
         toa_ranging = '/gtec/toa/ranging'
 
         self.live_plotter = LivePlotter()
 
         self.n = n
+
+        if tags is None:
+            self.tags = None
+        else:
+            self.tags = set(map(int, tags))
 
         ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
 
@@ -26,11 +32,12 @@ class RangePlotter:
         anchor_id = msg.anchorId
         tag_id = msg.tagId
 
-        label = "tag{}_anchor{}".format(tag_id, anchor_id)
+        if self.tags is None or tag_id in self.tags:
+            label = "tag{}_anchor{}".format(tag_id, anchor_id)
 
-        time = rospy.Time.now().to_sec()
+            time = rospy.Time.now().to_sec()
 
-        self.live_plotter.add_data_point(label, time, msg.range)
+            self.live_plotter.add_data_point(label, time, msg.range)
 
     def run(self):
         self.live_plotter.show()
@@ -38,5 +45,12 @@ class RangePlotter:
 if __name__ == "__main__":
     rospy.init_node("data_drawer_node")
 
-    data_plotter = RangePlotter()
+    myargv = rospy.myargv(argv=sys.argv)[1:]
+
+    print(myargv)
+
+    if len(myargv) == 0:
+        myargv = None
+
+    data_plotter = RangePlotter(myargv)
     data_plotter.run()
