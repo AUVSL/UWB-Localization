@@ -1,18 +1,18 @@
 # Jackal Ad-Hoc Ultra-wideband localization
 
 <p align="center">
-    <a href="https://github.com/Marius-Juston/UWB-Localization/graphs/contributors" alt="Contributors">
-        <img src="https://img.shields.io/github/contributors/Marius-Juston/UWB-Localization" /></a>
-    <a href="https://github.com/Marius-Juston/UWB-Localization/pulse" alt="Activity">
-        <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/Marius-Juston/UWB-Localization"></a>
-    <a href="https://github.com/Marius-Juston/UWB-Localization/stargazers">
-        <img alt="Stars" src="https://img.shields.io/github/stars/Marius-Juston/UWB-Localization"></a>
-    <a href="https://github.com/Marius-Juston/UWB-Localization/network/members">
-        <img alt="Forks" src="https://img.shields.io/github/forks/Marius-Juston/UWB-Localization"></a>
-    <a href="https://github.com/Marius-Juston/UWB-Localization/issues">
-        <img alt="Issues" src="https://img.shields.io/github/issues/Marius-Juston/UWB-Localization"></a>
+    <a href="https://github.com/AUVSL/UWB-Localization/graphs/contributors" alt="Contributors">
+        <img src="https://img.shields.io/github/contributors/AUVSL/UWB-Localization" /></a>
+    <a href="https://github.com/AUVSL/UWB-Localization/pulse" alt="Activity">
+        <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/AUVSL/UWB-Localization"></a>
+    <a href="https://github.com/AUVSL/UWB-Localization/stargazers">
+        <img alt="Stars" src="https://img.shields.io/github/stars/AUVSL/UWB-Localization"></a>
+    <a href="https://github.com/AUVSL/UWB-Localization/network/members">
+        <img alt="Forks" src="https://img.shields.io/github/forks/AUVSL/UWB-Localization"></a>
+    <a href="https://github.com/AUVSL/UWB-Localization/issues">
+        <img alt="Issues" src="https://img.shields.io/github/issues/AUVSL/UWB-Localization"></a>
     <a href="./LICENSE" alt="Activity">
-        <img alt="GitHub" src="https://img.shields.io/github/license/Marius-Juston/UWB-Localization"></a>
+        <img alt="GitHub" src="https://img.shields.io/github/license/AUVSL/UWB-Localization"></a>
 </p>
 
 ## 1. Table of contents
