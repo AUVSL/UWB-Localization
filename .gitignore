@@ -4,3 +4,5 @@ build/
 
 *.pyc
 out.csv
+frames.gv
+frames.pdf
