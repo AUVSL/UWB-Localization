@@ -85,8 +85,8 @@ class Jackal():
         }
 
         for range_data in self.ranging_data:
-            if range_data['tagID'] in self.tag_to_robot:
-                robot_name_ns = self.tag_to_robot[range_data['tagID']]
+            if range_data['anchorID'] in self.anchor_to_robot:
+                robot_name_ns = self.anchor_to_robot[range_data['anchorID']]
 
                 was_localized = self.check_if_localized(robot_name_ns)
 
