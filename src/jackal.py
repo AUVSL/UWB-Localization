@@ -2,6 +2,7 @@
 
 import rospy
 from ukf_uwb_localization import UKFUWBLocalization, get_tag_ids, get_time
+from jackal_motion import JackalMotion
 from gtec_msgs.msg import Ranging
 import json
 import rospkg
@@ -61,6 +62,8 @@ class Jackal():
 
         ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
 
+        self.motion = JackalMotion()
+
     def add_ranging(self, msg):
         # type: (Ranging) -> None
 
@@ -106,6 +109,7 @@ class Jackal():
             recoreded_data = self.explore_recorded_data()
 
         
+        self.motion.step()
         rospy.set_param("is_localized", self.is_localized)
 
 if __name__ == "__main__":
