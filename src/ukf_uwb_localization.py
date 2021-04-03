@@ -270,7 +270,7 @@ class UKFUWBLocalization:
                 self.intialize(np.array([center[0], center[1], 0, 0, theta, 0 ]), initial_P)
 
 
-def get_tag_ids(tags_file = 'tag_ids.json'):
+def get_tag_ids(ns, tags_file = 'tag_ids.json'):
     
     rospack = rospkg.RosPack()
     package_location = rospack.get_path('uwb_localization')
@@ -295,7 +295,7 @@ if __name__ == "__main__":
 
     print("Namespace:", ns)
 
-    right_tag, left_tag = get_tag_ids()
+    right_tag, left_tag = get_tag_ids(ns)
 
     
     intial_pose = rospy.wait_for_message(ns + 'ground_truth/state', Odometry)
