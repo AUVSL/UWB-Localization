@@ -84,12 +84,29 @@ class Jackal():
         # type: (Ranging) -> None
 
         if self.tag_to_robot[msg.tagId] == self.ns: 
+            is_mobile = msg.anchorId in self.anchor_to_robot
+
+            if is_mobile:
+                robot = self.anchor_to_robot[msg.anchorId]
+
+                localized = self.check_if_localized(robot)
+
+                if localized:
+                    pose = self.get_current_robot_pose(robot)
+                else: 
+                    pose = None
+            else:
+                localized = True
+                pose = self.anchor_poses[msg.anchorId]
+
             self.ranging_data.append(
                 {
                     "time": get_time(),
                     "anchorID": msg.anchorId,
                     "tagID": msg.tagId,
-                    "range": msg.range / 1000
+                    "range": msg.range / 1000,
+                    'localized' : localized,
+                    'pose' : pose
                 }
             )
 
