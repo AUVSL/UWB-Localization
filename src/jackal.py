@@ -1,13 +1,39 @@
 #! /usr/bin/env python
 
 import rospy
-
-print(__name__)
-
-from .ukf_uwb_localization import UKFUWBLocalization, get_tag_ids, get_time
+from ukf_uwb_localization import UKFUWBLocalization, get_tag_ids, get_time
 from gtec_msgs.msg import Ranging
+import json
+import rospkg
+import os
 
 class Jackal():
+    def get_tags(self, tags_file="tag_ids.json"):
+        rospack = rospkg.RosPack()
+        package_location = rospack.get_path('uwb_localization')
+        
+        tags_file = os.path.join(package_location, 'src' ,tags_file)
+
+        with open(tags_file, 'r') as f:
+            tag_data = json.load(f)
+
+        tag_to_robot = dict()
+        anchor_to_robot = dict()
+
+        for key, values in tag_data.items():
+
+            if values['right_tag'] not in tag_to_robot or tag_to_robot[values['right_tag']] == '/':
+                tag_to_robot[values['right_tag']] = key
+            
+            if values['left_tag'] not in tag_to_robot or tag_to_robot[values['left_tag']] == '/':
+                tag_to_robot[values['left_tag']] = key
+
+            if values['anchor'] not in tag_to_robot or tag_to_robot[values['anchor']] == '/':
+                anchor_to_robot[values['anchor']] = key
+
+        return tag_data, tag_to_robot, anchor_to_robot
+
+
     def __init__(self):
         p = [1.0001, 11.0, 14.0001, 20.9001, 1.0001, 0.0001, 0.0001, 3.9001, 4.9001, 1.0, 0, 0.0001, 0.0001, 0.0001, 2.0001, 0.0001, 0.0001]
 
@@ -17,6 +43,8 @@ class Jackal():
             self.ns = "/Jackal1/"
         self.ranging_data = []
         self.right_tag, self.left_tag, self.anchor = get_tag_ids(self.ns)
+
+        _, self.tag_to_robot, self.anchor_to_robot = self.get_tags() 
 
         print("Namespace:", self.ns)
 
