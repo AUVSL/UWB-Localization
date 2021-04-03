@@ -111,6 +111,8 @@ class Jackal():
 if __name__ == "__main__":
     rospy.init_node("full_jackal", anonymous=True)
 
+    jackal = Jackal()
+
 
     rospy.spin()
 
