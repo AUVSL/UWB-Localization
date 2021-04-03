@@ -4,8 +4,8 @@ import rospy
 
 print(__name__)
 
-from .ukf_uwb_localization import UKFUWBLocalization, get_tag_ids
-
+from .ukf_uwb_localization import UKFUWBLocalization, get_tag_ids, get_time
+from gtec_msgs.msg import Ranging
 
 class Jackal():
     def __init__(self):
@@ -25,8 +25,23 @@ class Jackal():
         rospy.set_param("right_id", self.right_tag)
         rospy.set_param("anchor", self.anchor)
 
+        toa_ranging = '/gtec/toa/ranging'
+
         ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
 
+        self.ranging_data = []
+
+    def add_ranging(self, msg):
+        # type: (Ranging) -> None
+
+        self.ranging_data.append(
+            {
+                "time": get_time(),
+                "anchorID": msg.anchorId,
+                "tagID": msg.tagId,
+                "range": msg.range / 1000
+            }
+        )
 
     def explore_recorded_data(self):
         data = {
