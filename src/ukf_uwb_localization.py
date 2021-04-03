@@ -312,9 +312,10 @@ def get_tag_ids(ns, tags_file = 'tag_ids.json'):
     print(tag_data)
     right_tag = tag_data[ns]['right_tag']
     left_tag = tag_data[ns]['left_tag']
-    print(right_tag, left_tag)
+    anchor = tag_data[ns]['anchor']
+    print(right_tag, left_tag, anchor)
 
-    return right_tag, left_tag
+    return right_tag, left_tag, anchor
 
 
 if __name__ == "__main__":
@@ -324,7 +325,7 @@ if __name__ == "__main__":
 
     print("Namespace:", ns)
 
-    right_tag, left_tag = get_tag_ids(ns)
+    right_tag, left_tag, _ = get_tag_ids(ns)
 
     
     intial_pose = rospy.wait_for_message(ns + 'ground_truth/state', Odometry)
