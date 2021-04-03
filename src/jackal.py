@@ -121,7 +121,11 @@ if __name__ == "__main__":
 
     jackal = Jackal()
 
+    rate = rospy.Rate(60)
 
-    rospy.spin()
+    while not rospy.is_shutdown():
+        jackal.step()
+
+        rate.sleep()
 
 
