@@ -34,14 +34,15 @@ class Jackal():
     def add_ranging(self, msg):
         # type: (Ranging) -> None
 
-        self.ranging_data.append(
-            {
-                "time": get_time(),
-                "anchorID": msg.anchorId,
-                "tagID": msg.tagId,
-                "range": msg.range / 1000
-            }
-        )
+        if self.tag_to_robot[msg.tagId] == self.ns: 
+            self.ranging_data.append(
+                {
+                    "time": get_time(),
+                    "anchorID": msg.anchorId,
+                    "tagID": msg.tagId,
+                    "range": msg.range / 1000
+                }
+            )
 
     def explore_recorded_data(self):
         data = {
