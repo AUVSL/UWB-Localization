@@ -7,9 +7,11 @@ from gtec_msgs.msg import Ranging
 import json
 import rospkg
 import os
+import numpy as np
 
 class Jackal():
     localized_param_key = "is_localized"
+    jackal_publish_path = 'uwb/odom'
 
     def get_tags(self, tags_file="tag_ids.json"):
         rospack = rospkg.RosPack()
@@ -60,11 +62,23 @@ class Jackal():
         rospy.set_param("right_id", self.right_tag)
         rospy.set_param("anchor", self.anchor)
 
+        anchors = '/gtec/toa/anchors'
         toa_ranging = '/gtec/toa/ranging'
+
+        self.anchor_poses = dict()
 
         ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
 
+        anchors_sub = rospy.Subscriber(anchors, MarkerArray, callback=self.add_anchors)
+
         self.motion = JackalMotion(self.ns)
+
+    def add_anchors(self, msg):
+        # type: (MarkerArray) -> None
+
+        for marker in msg.markers:
+            if marker.id not in self.anchor_to_robot: 
+                self.anchor_poses[marker.id] = np.array([marker.pose.position.x,marker.pose.position.y, marker.pose.position.z]) 
 
     def add_ranging(self, msg):
         # type: (Ranging) -> None
