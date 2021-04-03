@@ -50,11 +50,29 @@ class Jackal():
             "unlocalized": []
         }
 
+        for range_data in self.ranging_data:
+            if range_data['tagID'] in self.tag_to_robot:
+                robot_name_ns = self.tag_to_robot[range_data['tagID']]
+
+                was_localized = self.check_if_localized(robot_name_ns)
+
+                if was_localized:
+                    data['localized'].append(range_data)
+                else:
+                    data['unlocalized'].append(range_data)
+            else:
+                data['anchors'].append(range_data)
+
+        return data
+
+    def check_if_localized(self, name):
+        return rospy.get_param(name + "is_localized")
+
     def step(self):
         if self.is_localized:
             self.loc.step()
         else:
-            pass
+            recoreded_data = self.explore_recorded_data()
 
         
         rospy.set_param("is_localized", self.is_localized)
