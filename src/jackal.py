@@ -99,8 +99,10 @@ class Jackal():
 
         return data
 
-    def check_if_localized(self, name):
-        return rospy.get_param(name + "is_localized")
+    def check_if_localized(self, robot_name):
+        parameter_name = robot_name + "is_localized"
+        
+        return rospy.has_param(parameter_name) and rospy.get_param(parameter_name)
 
     def step(self):
         if self.is_localized:
