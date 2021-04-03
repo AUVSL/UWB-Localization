@@ -99,6 +99,10 @@ class Jackal():
                     pose = None
             else:
                 localized = True
+
+                if msg.anchorId not in self.anchor_poses:
+                    return 
+                
                 pose = self.anchor_poses[msg.anchorId]
 
             self.ranging_data.append(
