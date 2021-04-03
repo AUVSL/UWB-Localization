@@ -71,6 +71,8 @@ class UKFUWBLocalization:
         self.start_translation = np.zeros(2)
         self.start_rotation = 0
 
+        self.cache_data = []
+
     def retrieve_tag_offsets(self, tags, base_link='base_link', namespace=None, right_tag=0, left_tag=1):
         transforms = dict() 
 
@@ -166,6 +168,31 @@ class UKFUWBLocalization:
         self.ukf.initialize(x, P, t)
         self.initialized = True
 
+    def process_ukf_data(self):
+        for data in self.sensor_data:
+                self.ukf.update(data)
+
+        del self.sensor_data[:]
+
+        x, y,z, v, yaw, yaw_rate = self.ukf.x
+
+        self.odom.pose.pose.position.x = x
+        self.odom.pose.pose.position.y = y
+        self.odom.pose.pose.position.z = z
+        self.odom.twist.twist.linear.x = v
+        self.odom.twist.twist.angular.z = yaw_rate
+
+        self.estimated_pose.publish(self.odom)
+
+
+    def step(self, initial_P=None):
+        if not self.initialized:
+            d = np.linalg.norm(self.tag_offset[self.right_tag] - self.tag_offset[self.left_tag])
+
+            self.process_initial_data(self.cache_data, d, initial_P)
+        else:
+            self.process_ukf_data()
+
     def run(self, initial_P=None):
         if not self.initialized:
             self.initialize_pose(initial_P)
@@ -173,25 +200,7 @@ class UKFUWBLocalization:
         rate = rospy.Rate(60)
 
         while not rospy.is_shutdown():
-
-            # start_t = self.get_time()
-            for data in self.sensor_data:
-                self.ukf.update(data)
-            # delta_t = (self.get_time() - start_t) / 1e9
-            # print(len(self.sensor_data), delta_t)
-
-            del self.sensor_data[:]
-
-
-            x, y,z, v, yaw, yaw_rate = self.ukf.x
-
-            self.odom.pose.pose.position.x = x
-            self.odom.pose.pose.position.y = y
-            self.odom.pose.pose.position.z = z
-            self.odom.twist.twist.linear.x = v
-            self.odom.twist.twist.angular.z = yaw_rate
-
-            self.estimated_pose.publish(self.odom)
+            self.process_ukf_data()
 
             rate.sleep()
 
@@ -225,6 +234,40 @@ class UKFUWBLocalization:
 
         return residuals
 
+    def process_initial_data(self, uwb ,d, initial_P = None):
+        for s in self.sensor_data:
+            if s.data_type == DataType.UWB:
+                uwb.append({
+                    'anchor': s.extra['anchor'],
+                    'tag': s.extra['sensor_offset'],
+                    'dist': s.measurement_data
+                })
+
+        if len(uwb) > 3:
+            res = least_squares(self.func, [0,0,0,0], args=(d, uwb))
+
+            # print(res)
+
+            left = res.x[0:2]
+            right = res.x[2:4]
+            
+            center = (left + right) / 2
+            v_ab = left - right
+            theta = np.arccos(v_ab[1] / np.linalg.norm(v_ab))
+
+            print(center, v_ab, theta, np.degrees(theta))
+
+            del self.sensor_data[:]
+
+            self.start_translation = center
+            self.start_rotation = theta
+
+            if initial_P is None:
+                initial_P = np.identity(6)
+
+            self.intialize(np.array([center[0], center[1], 0, 0, theta, 0 ]), initial_P)
+
+
     def initialize_pose(self, initial_P=None):
 
         delay = 1 #s
@@ -232,43 +275,29 @@ class UKFUWBLocalization:
 
         d = np.linalg.norm(self.tag_offset[self.right_tag] - self.tag_offset[self.left_tag])
 
+        uwb = []
+
+        i = 0
+
         while not rospy.is_shutdown() and not self.initialized:
+            if i > 4:
+                x = np.zeros(6)
+
+                for i in range(len(self.sensor_data)):
+                    data = self.sensor_data[-(i + 1)]
+
+                    if data.data_type == DataType.ODOMETRY:
+                        x = data.measurement_data
+                        break
+
+                self.intialize(x,initial_P)
+
+                break
+
+            self.process_initial_data(uwb, d, initial_P)
+
+            i+= 1
             rate.sleep()
-
-            uwb = []
-
-            for s in self.sensor_data:
-                if s.data_type == DataType.UWB:
-                    uwb.append({
-                        'anchor': s.extra['anchor'],
-                        'tag': s.extra['sensor_offset'],
-                        'dist': s.measurement_data
-                    })
-
-            if len(uwb) > 3:
-                res = least_squares(self.func, [0,0,0,0], args=(d, uwb))
-
-                # print(res)
-
-                left = res.x[0:2]
-                right = res.x[2:4]
-                
-                center = (left + right) / 2
-                v_ab = left - right
-                theta = np.arccos(v_ab[1] / np.linalg.norm(v_ab))
-
-                print(center, v_ab, theta, np.degrees(theta))
-
-                del self.sensor_data[:]
-
-                self.start_translation = center
-                self.start_rotation = theta
-
-                if initial_P is None:
-                    initial_P = np.identity(6)
-
-                self.intialize(np.array([center[0], center[1], 0, 0, theta, 0 ]), initial_P)
-
 
 def get_tag_ids(ns, tags_file = 'tag_ids.json'):
     
@@ -308,7 +337,7 @@ if __name__ == "__main__":
         intial_pose.pose.pose.orientation.w
     ))[2]
 
-    print x, y, v, theta
+    print "Actual Initial",x, y, v, theta
 
     p = [1.0001, 11.0, 14.0001, 20.9001, 1.0001, 0.0001, 0.0001, 3.9001, 4.9001, 1.0, 0, 0.0001, 0.0001, 0.0001, 2.0001, 0.0001, 0.0001]
 
