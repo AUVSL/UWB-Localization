@@ -62,7 +62,7 @@ class Jackal():
 
         ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
 
-        self.motion = JackalMotion()
+        self.motion = JackalMotion(self.ns)
 
     def add_ranging(self, msg):
         # type: (Ranging) -> None
