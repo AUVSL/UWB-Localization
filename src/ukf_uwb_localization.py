@@ -14,6 +14,9 @@ import json
 import rospkg
 import os
 
+def get_time():
+    return rospy.Time.now().to_nsec()
+
 class UKFUWBLocalization:
     def __init__(self, uwb_std=1, odometry_std=(1,1,1,1,1,1), accel_std=1, yaw_accel_std=1, alpha=1, beta=0, namespace=None, right_tag=0, left_tag=1):
         if namespace is None:
@@ -111,7 +114,7 @@ class UKFUWBLocalization:
         return transforms
 
     def add_odometry(self, msg):
-        t = self.get_time()
+        t = get_time()
 
 
         px = msg.pose.pose.position.x
@@ -142,12 +145,9 @@ class UKFUWBLocalization:
         for marker in msg.markers:
             self.anchor_poses[marker.id] = np.array([marker.pose.position.x,marker.pose.position.y, marker.pose.position.z]) 
 
-    def get_time(self):
-        return rospy.Time.now().to_nsec()
-
     def add_ranging(self, msg):
         # type: (Ranging) -> None
-        t = self.get_time()
+        t = get_time()
 
         if msg.anchorId in self.anchor_poses:
             if msg.tagId in self.tag_offset:
@@ -163,7 +163,7 @@ class UKFUWBLocalization:
                 self.sensor_data.append(data)
 
     def intialize(self, x, P):
-        t = self.get_time()
+        t = get_time()
 
         self.ukf.initialize(x, P, t)
         self.initialized = True
