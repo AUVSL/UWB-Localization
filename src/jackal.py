@@ -9,6 +9,8 @@ import rospkg
 import os
 
 class Jackal():
+    localized_param_key = "is_localized"
+
     def get_tags(self, tags_file="tag_ids.json"):
         rospack = rospkg.RosPack()
         package_location = rospack.get_path('uwb_localization')
@@ -50,7 +52,7 @@ class Jackal():
         print("Namespace:", self.ns)
 
         self.is_localized = False
-        rospy.set_param("is_localized", self.is_localized)
+        rospy.set_param(Jackal.localized_param_key, self.is_localized)
 
         self.loc = UKFUWBLocalization(p[0], p[1:7], accel_std=p[7], yaw_accel_std=p[8], alpha=p[9], beta=p[10], namespace=self.ns, right_tag=self.right_tag, left_tag=self.left_tag)
 
@@ -100,7 +102,7 @@ class Jackal():
         return data
 
     def check_if_localized(self, robot_name):
-        parameter_name = robot_name + "is_localized"
+        parameter_name = robot_name + Jackal.localized_param_key
         
         return rospy.has_param(parameter_name) and rospy.get_param(parameter_name)
 
@@ -112,7 +114,7 @@ class Jackal():
 
         
         self.motion.step()
-        rospy.set_param("is_localized", self.is_localized)
+        rospy.set_param(Jackal.localized_param_key, self.is_localized)
 
 if __name__ == "__main__":
     rospy.init_node("full_jackal", anonymous=True)
