@@ -79,6 +79,14 @@ class Jackal():
                 }
             )
 
+    def get_current_robot_pose(self, robot_name):
+        path_name = robot_name + Jackal.jackal_publish_path
+
+        msg = rospy.wait_for_message(path_name, Odometry)
+
+        return np.array([msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z])
+
+
     def explore_recorded_data(self):
         data = {
             "anchors": [],
