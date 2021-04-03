@@ -126,23 +126,24 @@ class Jackal():
 
     def explore_recorded_data(self):
         data = {
-            "anchors": [],
-            "localized": [],
-            "unlocalized": []
+            "localized": {
+                "data": [],
+                'robots' : []
+            },
+            "unlocalized": {
+                'data': [],
+                "robots" :[]
+            }
         }
 
         for range_data in self.ranging_data:
-            if range_data['anchorID'] in self.anchor_to_robot:
-                robot_name_ns = self.anchor_to_robot[range_data['anchorID']]
-
-                was_localized = self.check_if_localized(robot_name_ns)
-
-                if was_localized:
-                    data['localized'].append(range_data)
-                else:
-                    data['unlocalized'].append(range_data)
+            if range_data['localized']:
+                container = data['localized']
             else:
-                data['anchors'].append(range_data)
+                container = data['unlocalized']
+
+            container['data'].append(range_data)
+            container['robots'].append(range_data['anchorID'])
 
         return data
 
@@ -157,7 +158,7 @@ class Jackal():
         else:
             recoreded_data = self.explore_recorded_data()
 
-        
+            total_knowns = len(set(recoreded_data['localized']['robots']))
         self.motion.step()
         rospy.set_param(Jackal.localized_param_key, self.is_localized)
 
