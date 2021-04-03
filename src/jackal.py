@@ -12,6 +12,10 @@ class Jackal():
         p = [1.0001, 11.0, 14.0001, 20.9001, 1.0001, 0.0001, 0.0001, 3.9001, 4.9001, 1.0, 0, 0.0001, 0.0001, 0.0001, 2.0001, 0.0001, 0.0001]
 
         self.ns = rospy.get_namespace()
+
+        if self.ns == '/':
+            self.ns = "/Jackal1/"
+        self.ranging_data = []
         self.right_tag, self.left_tag, self.anchor = get_tag_ids(self.ns)
 
         print("Namespace:", self.ns)
@@ -28,8 +32,6 @@ class Jackal():
         toa_ranging = '/gtec/toa/ranging'
 
         ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
-
-        self.ranging_data = []
 
     def add_ranging(self, msg):
         # type: (Ranging) -> None
