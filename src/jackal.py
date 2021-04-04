@@ -10,6 +10,7 @@ import json
 import rospkg
 import os
 import numpy as np
+from scipy.optimize import least_squares
 
 class Jackal():
     localized_param_key = "is_localized"
@@ -59,6 +60,10 @@ class Jackal():
         rospy.set_param(Jackal.localized_param_key, self.is_localized)
 
         self.loc = UKFUWBLocalization(p[0], p[1:7], accel_std=p[7], yaw_accel_std=p[8], alpha=p[9], beta=p[10], namespace=self.ns, right_tag=self.right_tag, left_tag=self.left_tag)
+
+        self.d = np.linalg.norm(self.loc.tag_offset[self.right_tag] - self.loc.tag_offset[self.left_tag])
+
+        print(self.d)
 
         rospy.set_param("left_id", self.left_tag)
         rospy.set_param("right_id", self.right_tag)
@@ -159,8 +164,64 @@ class Jackal():
             recoreded_data = self.explore_recorded_data()
 
             total_knowns = len(set(recoreded_data['localized']['robots']))
+            
+            if total_knowns >= 3:
+                total_data_points = len(recoreded_data['localized']['data'])
+
+                print(total_data_points)
+                if total_data_points > 50:
+                    pose = self.trilaterate_position(recoreded_data['localized']['data'])
+                    self.is_localized = True
+                    self.loc.intialize(pose, np.identity(6))
+
+                    print(pose)
+
         self.motion.step()
         rospy.set_param(Jackal.localized_param_key, self.is_localized)
+
+    def trilaterate_position(self, range_data):
+        res = least_squares(self.trilateration_function, [0,0,0,0], args=(range_data, ))
+
+        left = res.x[0:2]
+        right = res.x[2:4]
+        
+        center = (left + right) / 2
+        v_ab = left - right
+        theta = np.arccos(v_ab[1] / np.linalg.norm(v_ab))
+
+        print(center, v_ab, theta, np.degrees(theta))
+
+        return np.array([center[0], center[1], 0, 0, theta, 0 ])
+
+    def trilateration_function(self, x, distances):
+        # x[0] = left_x
+        # x[1] = left_y
+        # x[2] = right_x
+        # x[3] = right_y
+
+        x1, y1, x2, y2 = x
+
+        residuals = [
+            (x1 - x2) ** 2 + (y1 - y2) ** 2 - self.d ** 2,
+        ]
+
+        for distance in distances:
+            anchor = distance['pose']
+            tagID = distance['tagID']
+            distance = distance['range']
+
+            z = self.loc.tag_offset[tagID][2]
+
+            if tagID == self.left_tag:
+                x = x1
+                y = y1
+            else:
+                x = x2
+                y = y2
+
+            residuals.append((x - anchor[0]) ** 2 + (y - anchor[1]) ** 2 + (z - anchor[2]) ** 2 - distance ** 2)
+
+        return residuals
 
 if __name__ == "__main__":
     rospy.init_node("full_jackal", anonymous=True)
