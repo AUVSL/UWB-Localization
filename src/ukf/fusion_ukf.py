@@ -1,3 +1,4 @@
+# coding=utf-8
 import numpy as np
 
 from ukf.measurement_predictor import MeasurementPredictor
@@ -5,12 +6,13 @@ from ukf.state_predictor import StatePredictor
 from ukf.state_updater import StateUpdater
 
 
-class FusionUKF:
+class FusionUKF(object):
     def __init__(self, sensor_std, speed_noise_std=.9, yaw_rate_noise_std=.6, alpha=1, beta=0):
         # ODOMETRY: beta=0.3
         # UWB: beta=0.3
 
         self.initialized = False
+        self.timestamp = None
 
         # Number of total states X, Y, Z, velocity, yaw, yaw rate
         self.NX = 6

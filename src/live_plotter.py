@@ -1,8 +1,11 @@
+# coding=utf-8
+from __future__ import print_function
+
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 
-class LivePlotter:
+class LivePlotter(object):
     def __init__(self, update_interval=1000, alpha=1.0):
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(1, 1, 1)
@@ -38,7 +41,7 @@ class LivePlotter:
             self.ax.relim()
             self.ax.autoscale_view()
         except ValueError:
-            print "Error graphing"
+            print("Error graphing")
 
         return self.objects.values()
 

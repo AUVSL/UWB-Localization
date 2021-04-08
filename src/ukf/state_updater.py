@@ -1,3 +1,4 @@
+# coding=utf-8
 import numpy as np
 
 from ukf.datapoint import DataType
@@ -5,11 +6,14 @@ from ukf.state import UKFState
 from ukf.util import normalize
 
 
-class StateUpdater:
+class StateUpdater(object):
     def __init__(self, NX, N_SIGMA, WEIGHTS):
         self.N_SIGMA = N_SIGMA
         self.WEIGHTS = WEIGHTS
         self.NX = NX
+        self.x = None
+        self.P = None
+        self.nis = None
 
     def compute_Tc(self, predicted_x, predicted_z, sigma_x, sigma_z):
         dx = np.subtract(sigma_x.T, predicted_x).T
@@ -28,7 +32,7 @@ class StateUpdater:
 
         dz = z - predicted_z
 
-        if (data_type == DataType.ODOMETRY):
+        if data_type == DataType.ODOMETRY:
             normalize(dz, UKFState.YAW)
 
             # print(z[UKFState.YAW], predicted_z[UKFState.YAW], dz[UKFState.YAW])

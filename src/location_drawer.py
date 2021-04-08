@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# coding=utf-8
 
 import matplotlib
 
@@ -11,7 +12,7 @@ from geometry_msgs.msg import Point
 import sys
 
 
-class PositionPlotter:
+class PositionPlotter(object):
     def __init__(self, robot_name='jackal', position_links=None):
         if position_links is None:
             position_links = ['/odometry/filtered', '/ground_truth/state', '/jackal/uwb/pose/0', '/jackal/uwb/pose/1',

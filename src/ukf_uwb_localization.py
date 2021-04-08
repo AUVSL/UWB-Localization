@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+# coding=utf-8
+from __future__ import print_function
 
 import json
 import numpy as np
@@ -20,7 +22,7 @@ def get_time():
     return rospy.Time.now().to_nsec()
 
 
-class UKFUWBLocalization:
+class UKFUWBLocalization(object):
     def __init__(self, uwb_std=1, odometry_std=(1, 1, 1, 1, 1, 1), accel_std=1, yaw_accel_std=1, alpha=1, beta=0,
                  namespace=None, right_tag=0, left_tag=1):
         if namespace is None:
@@ -339,7 +341,7 @@ if __name__ == "__main__":
         intial_pose.pose.pose.orientation.w
     ))[2]
 
-    print "Actual Initial", x, y, v, theta
+    print("Actual Initial", x, y, v, theta)
 
     p = [1.0001, 11.0, 14.0001, 20.9001, 1.0001, 0.0001, 0.0001, 3.9001, 4.9001, 1.0, 0, 0.0001, 0.0001, 0.0001, 2.0001,
          0.0001, 0.0001]

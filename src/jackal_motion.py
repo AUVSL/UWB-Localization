@@ -1,10 +1,11 @@
 #! /usr/bin/env python
+# coding=utf-8
 
 import rospy
 from geometry_msgs.msg import Twist
 
 
-class JackalMotion:
+class JackalMotion(object):
     def __init__(self, namespace):
         self.v = 0
         self.w = 0

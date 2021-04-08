@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# coding=utf-8
 
 import csv
 import rospy
@@ -10,7 +11,7 @@ from visualization_msgs.msg import MarkerArray
 from ukf.datapoint import DataType, DataPoint
 
 
-class Recorder:
+class Recorder(object):
     def __init__(self, out="out.csv"):
         self.data = []
         self.out = out

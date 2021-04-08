@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# coding=utf-8
 
 import matplotlib
 
@@ -11,7 +12,7 @@ from live_plotter import LivePlotter
 import sys
 
 
-class RangePlotter:
+class RangePlotter(object):
     def __init__(self, tags=None, n=-1):
         toa_ranging = '/gtec/toa/ranging'
 

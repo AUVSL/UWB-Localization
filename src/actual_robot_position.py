@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+# coding=utf-8
+from __future__ import print_function
 
 import rospy
 import sys
@@ -31,6 +33,6 @@ if __name__ == "__main__":
 
             pub.publish(point)
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            print "Unable to find transform"
+            print("Unable to find transform")
 
         rate.sleep()

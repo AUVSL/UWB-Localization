@@ -1,10 +1,11 @@
+# coding=utf-8
 import numpy as np
 
 from ukf.state import UKFState
 from ukf.util import normalize
 
 
-class StatePredictor:
+class StatePredictor(object):
     def __init__(self, NX, N_SIGMA, N_AUGMENTED, VAR_SPEED_NOISE, VAR_YAW_RATE_NOISE, SCALE, WEIGHTS):
         self.WEIGHTS = WEIGHTS
         self.NX = NX

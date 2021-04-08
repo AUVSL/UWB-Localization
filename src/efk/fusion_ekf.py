@@ -1,10 +1,11 @@
+# coding=utf-8
 import numpy as np
 import time
 
 from kalman_filter import KalmanFilter
 
 
-class FusionEKF:
+class FusionEKF(object):
     def __init__(self):
         self.kalman_filter = KalmanFilter()
         self.is_initialized = False

@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# coding=utf-8
 
 import numpy as np
 import rospy
@@ -10,7 +11,7 @@ from visualization_msgs.msg import MarkerArray
 from efk.fusion_ekf import FusionEKF
 
 
-class UWBLocalization:
+class UWBLocalization(object):
     def __init__(self):
         self.kalman_filter_tag_0 = FusionEKF()
         self.kalman_filter_tag_1 = FusionEKF()

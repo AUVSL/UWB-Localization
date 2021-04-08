@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# coding=utf-8
 
 import json
 import numpy as np
@@ -14,7 +15,7 @@ from jackal_motion import JackalMotion
 from ukf_uwb_localization import UKFUWBLocalization, get_tag_ids, get_time
 
 
-class Jackal():
+class Jackal(object):
     localized_param_key = "is_localized"
     jackal_publish_path = 'uwb/odom'
 

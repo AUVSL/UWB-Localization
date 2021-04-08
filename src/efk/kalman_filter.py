@@ -1,7 +1,10 @@
+# coding=utf-8
+from __future__ import print_function
+
 import numpy as np
 
 
-class KalmanFilter:
+class KalmanFilter(object):
     def __init__(self):
         self.threshold = 100
         self.x = None
@@ -10,6 +13,8 @@ class KalmanFilter:
         self.H = None
         self.R = None
         self.Q = None
+        self.S = None
+        self.K = None
         self.I = np.identity(6)
 
     def init(self, x, P, F, H, R, Q):
@@ -45,7 +50,7 @@ class KalmanFilter:
 
         Dm = np.sqrt(distance_sub * inverse_S * distance_sub)
 
-        print Dm
+        print(Dm)
 
         if np.all(Dm < self.threshold):
             self.K = np.matmul(np.matmul(self.P, H_transpose), inverse_S)

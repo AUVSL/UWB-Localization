@@ -1,3 +1,4 @@
+# coding=utf-8
 import numpy as np
 
 from ukf.datapoint import DataType
@@ -5,7 +6,7 @@ from ukf.state import UKFState
 from ukf.util import normalize
 
 
-class MeasurementPredictor:
+class MeasurementPredictor(object):
     def __init__(self, sensor_std, N_SIGMA, WEIGHTS):
         self.sensor_std = sensor_std
 
@@ -21,6 +22,8 @@ class MeasurementPredictor:
 
         self.R = None
         self.nz = None
+        self.anchor_pos = None
+        self.sensor_offset = None
 
     def initialize(self, data):
         sensor_type = data.data_type
