@@ -105,6 +105,7 @@ class Jackal(object):
 
     def add_ranging(self, msg):
         # type: (Ranging) -> None
+        t = get_time()
 
         if self.tag_to_robot[msg.tagId] == self.ns:
             is_mobile = msg.anchorId in self.anchor_to_robot
@@ -128,7 +129,7 @@ class Jackal(object):
 
             self.ranging_data.append(
                 {
-                    "time": get_time(),
+                    "time": t,
                     "anchorID": msg.anchorId,
                     "tagID": msg.tagId,
                     "range": msg.range / 1000,
