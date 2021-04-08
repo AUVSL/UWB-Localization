@@ -234,8 +234,64 @@ class Jackal(object):
         self.motion.step()
         rospy.set_param(Jackal.localized_param_key, self.is_localized)
 
+    def find_closest_odometry(self, range_data):
+        closest = np.zeros((len(range_data), 4))
+
+        for i, datapoint in enumerate(range_data):
+            t = datapoint['time']
+
+            start, end = self.find_closest_sorted(t)
+            interpol = self.odom_interpolation(start, end, t)
+
+            # print start, end, t, self.odom_times[start], self.odom_times[end], interpol[[1, 2, 3, 5]]
+
+            closest[i] = interpol[[0, 1, 2, 4]]
+            # print start, end, interpol
+        # print closest
+
+        return closest
+
+    def odom_interpolation(self, start, end, t):
+
+        odom_initial = self.odometry_data[start]
+        odom_final = self.odometry_data[end]
+
+        dt = (self.odom_times[end] - self.odom_times[start])
+
+        if dt != 0:
+            percent = (t - self.odom_times[start]) / dt
+        else:
+            return odom_initial
+
+        # print start, end, self.odom_times[end],  self.odom_times[start],percent
+
+        blend = (1 - percent) * odom_initial + percent * odom_final
+
+        angle_start = odom_initial[4] % (2 * np.pi)
+        angle_end = odom_final[4] % (2 * np.pi)
+
+        rotation = ((angle_start - angle_end) + np.pi) % (2 * np.pi) - np.pi
+        blend[4] = (odom_initial[4] + rotation * percent) % (2 * np.pi)
+
+        return blend
+
+    def find_closest_sorted(self, t):
+        # print times.shape
+
+        idx = np.searchsorted(self.odom_times, t, side='left')
+
+        if idx != 0 and (idx >= len(self.odom_times) - 1 or self.odom_times[idx] > t):
+            if idx == len(self.odom_times):
+                idx -= 1
+
+            return idx - 1, idx
+        return idx, idx + 1
+
     def trilaterate_position(self, range_data):
-        res = least_squares(self.trilateration_function, [0, 0, 0, 0], args=(range_data,))
+        if len(self.odometry_data) > len(range_data):
+            odometry = self.find_closest_odometry(range_data)
+        else:
+            odometry = np.zeros((4, len(range_data)))
 
         left = res.x[0:2]
         right = res.x[2:4]
