@@ -55,6 +55,8 @@ class Jackal(object):
         if self.ns == '/':
             self.ns = "/Jackal1/"
         self.ranging_data = []
+        self.odometry_data = np.empty(6)
+        self.odom_times = np.empty(1)
         self.right_tag, self.left_tag, self.anchor = get_tag_ids(self.ns)
 
         _, self.tag_to_robot, self.anchor_to_robot = self.get_tags()
@@ -78,11 +80,18 @@ class Jackal(object):
         anchors = '/gtec/toa/anchors'
         toa_ranging = '/gtec/toa/ranging'
 
+        if self.ns is not None:
+            odometry = self.ns + 'odometry/filtered'
+        else:
+            odometry = '/odometry/filtered'
+
         self.anchor_poses = dict()
 
         ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
 
         anchors_sub = rospy.Subscriber(anchors, MarkerArray, callback=self.add_anchors)
+
+        odometry_sub = rospy.Subscriber(odometry, Odometry, callback=self.add_odometry)
 
         self.motion = JackalMotion(self.ns)
 
@@ -127,6 +136,32 @@ class Jackal(object):
                     'pose': pose
                 }
             )
+
+    def add_odometry(self, msg):
+        # type: (Odometry) -> None
+
+        t = get_time()
+
+        px = msg.pose.pose.position.x
+        py = msg.pose.pose.position.y
+        pz = msg.pose.pose.position.z
+
+        v = msg.twist.twist.linear.x
+        theta = euler_from_quaternion((
+            msg.pose.pose.orientation.x,
+            msg.pose.pose.orientation.y,
+            msg.pose.pose.orientation.z,
+            msg.pose.pose.orientation.w
+        ))[2]
+
+        theta_yaw = msg.twist.twist.angular.z
+
+        # print(t, px, py, pz, v, theta, theta_yaw)
+        # print(self.odometry_data.dtype)
+        # print(len(self.odom_times), self.odom_times.dtype)
+
+        self.odometry_data = np.vstack((self.odometry_data, (px, py, pz, v, theta, theta_yaw)))
+        self.odom_times = np.append(self.odom_times, np.uint64(t))
 
     def get_current_robot_pose(self, robot_name):
         path_name = robot_name + Jackal.jackal_publish_path
