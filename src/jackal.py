@@ -344,6 +344,8 @@ class Jackal(object):
             # x = x_point + rotate[0]
             # y = y_point + rotate[1]
 
+            # TODO If you add movement then you must also add global rotation
+
             x = x_point
             y = y_point
 
