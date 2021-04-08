@@ -1,12 +1,14 @@
 #! /usr/bin/env python
 
-import rospy
-from nav_msgs.msg import Odometry
-from visualization_msgs.msg import MarkerArray
-from gtec_msgs.msg import Ranging
-from ukf.datapoint import DataType, DataPoint
-from tf.transformations import euler_from_quaternion, euler_from_quaternion 
 import csv
+import rospy
+from gtec_msgs.msg import Ranging
+from nav_msgs.msg import Odometry
+from tf.transformations import euler_from_quaternion, euler_from_quaternion
+from visualization_msgs.msg import MarkerArray
+
+from ukf.datapoint import DataType, DataPoint
+
 
 class Recorder:
     def __init__(self, out="out.csv"):
@@ -16,8 +18,8 @@ class Recorder:
         self.anchor_poses = dict()
 
         self.tag_offset = {
-            1:[0, 0.162, 0.184],
-            0:[0, -0.162, 0.184]
+            1: [0, 0.162, 0.184],
+            0: [0, -0.162, 0.184]
         }
 
         anchors = '/gtec/toa/anchors'
@@ -59,8 +61,7 @@ class Recorder:
         # type: (MarkerArray) -> None
 
         for marker in msg.markers:
-            self.anchor_poses[marker.id] = [marker.pose.position.x,marker.pose.position.y, marker.pose.position.z] 
-
+            self.anchor_poses[marker.id] = [marker.pose.position.x, marker.pose.position.y, marker.pose.position.z]
 
     def get_time(self):
         return rospy.Time.now().to_nsec()
@@ -75,16 +76,15 @@ class Recorder:
 
             tag = self.tag_offset[msg.tagId]
 
-            self.data.append((DataType.UWB, anchor_distance, 
-                                anchor_pose[0], anchor_pose[1], anchor_pose[2], 
-                                tag[0], tag[1], tag[2], t))
+            self.data.append((DataType.UWB, anchor_distance,
+                              anchor_pose[0], anchor_pose[1], anchor_pose[2],
+                              tag[0], tag[1], tag[2], t))
 
     def save(self):
         print("Saving", len(self.data), "datapoints")
 
         with open(self.out, "w") as file:
             file.writelines(",".join(map(str, d)) + '\n' for d in self.data)
-
 
 
 if __name__ == "__main__":

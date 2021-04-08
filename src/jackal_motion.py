@@ -1,7 +1,8 @@
 #! /usr/bin/env python
 
-from geometry_msgs.msg import Twist
 import rospy
+from geometry_msgs.msg import Twist
+
 
 class JackalMotion:
     def __init__(self, namespace):
@@ -17,4 +18,3 @@ class JackalMotion:
         self.cmd.angular.z = self.w
 
         self.vel_pub.publish(self.cmd)
-

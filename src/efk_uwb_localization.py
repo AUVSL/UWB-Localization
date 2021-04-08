@@ -1,12 +1,14 @@
 #! /usr/bin/env python
 
-import rospy
-from efk.fusion_ekf import FusionEKF
-from visualization_msgs.msg import MarkerArray
-from gtec_msgs.msg import Ranging
 import numpy as np
-from nav_msgs.msg import Odometry
+import rospy
 import tf
+from gtec_msgs.msg import Ranging
+from nav_msgs.msg import Odometry
+from visualization_msgs.msg import MarkerArray
+
+from efk.fusion_ekf import FusionEKF
+
 
 class UWBLocalization:
     def __init__(self):
@@ -26,23 +28,23 @@ class UWBLocalization:
 
         self.estimated_pose_tag_0 = rospy.Publisher(publish_tag_0, Odometry, queue_size=1)
         self.estimated_pose_tag_1 = rospy.Publisher(publish_tag_1, Odometry, queue_size=1)
-        
+
         self.pose = Odometry()
 
         self.tf_listener = tf.TransformListener()
 
     def change_pose_ref(self, odom, tag, world='/world', base='/base_link'):
         try:
-            (trans,rot) = self.tf_listener.lookupTransform(world, tag, rospy.Time(0))
+            (trans, rot) = self.tf_listener.lookupTransform(world, tag, rospy.Time(0))
 
             pose = odom.pose.pose.position
 
             pose.x -= trans[0]
             pose.y -= trans[1]
             pose.z -= trans[2]
-            
-            (trans,rot) = self.tf_listener.lookupTransform(world, base, rospy.Time(0))
-        
+
+            (trans, rot) = self.tf_listener.lookupTransform(world, base, rospy.Time(0))
+
             pose.x += trans[0]
             pose.y += trans[1]
             pose.z += trans[2]
@@ -55,7 +57,8 @@ class UWBLocalization:
         # type: (MarkerArray) -> None
 
         for marker in msg.markers:
-            self.anchor_poses[marker.id] = np.array([marker.pose.position.x,marker.pose.position.y,marker.pose.position.z]) 
+            self.anchor_poses[marker.id] = np.array(
+                [marker.pose.position.x, marker.pose.position.y, marker.pose.position.z])
 
     def add_ranging(self, msg):
         # type: (Ranging) -> None
@@ -85,7 +88,7 @@ class UWBLocalization:
 
             # if r:
             self.estimated_pose_tag_0.publish(self.pose)
-            
+
             self.pose.pose.pose.position.x = self.kalman_filter_tag_1.kalman_filter.x[0]
             self.pose.pose.pose.position.y = self.kalman_filter_tag_1.kalman_filter.x[1]
             self.pose.pose.pose.position.z = self.kalman_filter_tag_1.kalman_filter.x[2]
@@ -94,13 +97,13 @@ class UWBLocalization:
             self.pose.twist.twist.linear.y = self.kalman_filter_tag_1.kalman_filter.x[4]
             self.pose.twist.twist.linear.z = self.kalman_filter_tag_1.kalman_filter.x[5]
 
-
             # r = self.change_pose_ref(self.pose, '/left_tag')
-            
+
             # if r:
             self.estimated_pose_tag_1.publish(self.pose)
 
             rate.sleep()
+
 
 if __name__ == "__main__":
     rospy.init_node("uwb_localization_kalman")
@@ -108,5 +111,3 @@ if __name__ == "__main__":
     loc.run()
 
     rospy.spin()
-
-

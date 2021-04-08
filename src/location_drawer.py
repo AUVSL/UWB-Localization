@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import matplotlib
+
 matplotlib.use('Qt5Agg')
 
 import rospy
@@ -13,8 +14,8 @@ import sys
 class PositionPlotter:
     def __init__(self, robot_name='jackal', position_links=None):
         if position_links is None:
-            position_links = ['/odometry/filtered', '/ground_truth/state', '/jackal/uwb/pose/0', '/jackal/uwb/pose/1', '/jackal/uwb/odom' ]
-
+            position_links = ['/odometry/filtered', '/ground_truth/state', '/jackal/uwb/pose/0', '/jackal/uwb/pose/1',
+                              '/jackal/uwb/odom']
 
         self.live_plotter = LivePlotter(alpha=0.5)
         self.live_plotter.ax.set_aspect("equal")
@@ -28,14 +29,15 @@ class PositionPlotter:
         self.subscribers = dict()
 
         for position_link in position_links:
-            self.subscribers[position_link] = rospy.Subscriber(position_link, Odometry, self.create_position_subscriber_func(position_link))
+            self.subscribers[position_link] = rospy.Subscriber(position_link, Odometry,
+                                                               self.create_position_subscriber_func(position_link))
 
     def create_position_subscriber_func(self, name):
         def add_pose(msg):
             # type: (Odometry) -> None
 
             x = msg.pose.pose.position.x
-            y = msg.pose.pose.position.y 
+            y = msg.pose.pose.position.y
 
             self.live_plotter.add_data_point(name, x, y)
 
@@ -47,7 +49,7 @@ class PositionPlotter:
     def run(self):
         self.live_plotter.show()
 
-        
+
 if __name__ == "__main__":
     rospy.init_node("location_drawer_node")
 

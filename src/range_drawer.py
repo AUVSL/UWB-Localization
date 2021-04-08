@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import matplotlib
+
 matplotlib.use('Qt5Agg')
 
 import rospy
@@ -8,6 +9,7 @@ import matplotlib.pyplot as plt
 from gtec_msgs.msg import Ranging
 from live_plotter import LivePlotter
 import sys
+
 
 class RangePlotter:
     def __init__(self, tags=None, n=-1):
@@ -24,10 +26,8 @@ class RangePlotter:
 
         ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
 
-
-    def add_ranging(self, msg): 
+    def add_ranging(self, msg):
         # type: (Ranging) -> None
-
 
         anchor_id = msg.anchorId
         tag_id = msg.tagId
@@ -41,7 +41,8 @@ class RangePlotter:
 
     def run(self):
         self.live_plotter.show()
-        
+
+
 if __name__ == "__main__":
     rospy.init_node("data_drawer_node")
 

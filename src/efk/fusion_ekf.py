@@ -1,6 +1,5 @@
-import time
-
 import numpy as np
+import time
 
 from kalman_filter import KalmanFilter
 
