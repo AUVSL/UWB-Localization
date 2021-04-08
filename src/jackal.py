@@ -55,8 +55,8 @@ class Jackal(object):
         if self.ns == '/':
             self.ns = "/Jackal1/"
         self.ranging_data = []
-        self.odometry_data = np.empty(6)
-        self.odom_times = np.empty(1)
+        self.odometry_data = None
+        self.odom_times = None
         self.right_tag, self.left_tag, self.anchor = get_tag_ids(self.ns)
 
         _, self.tag_to_robot, self.anchor_to_robot = self.get_tags()
@@ -161,8 +161,14 @@ class Jackal(object):
         # print(self.odometry_data.dtype)
         # print(len(self.odom_times), self.odom_times.dtype)
 
-        self.odometry_data = np.vstack((self.odometry_data, (px, py, pz, v, theta, theta_yaw)))
-        self.odom_times = np.append(self.odom_times, np.uint64(t))
+        if self.odometry_data is None:
+            self.odometry_data = np.array((px, py, pz, v, theta, theta_yaw))
+        else:
+            self.odometry_data = np.vstack((self.odometry_data, (px, py, pz, v, theta, theta_yaw)))
+        if self.odom_times is None:
+            self.odom_times = np.array([t], dtype=np.uint64)
+        else:
+            self.odom_times = np.append(self.odom_times, t)
 
     def get_current_robot_pose(self, robot_name):
         path_name = robot_name + Jackal.jackal_publish_path
