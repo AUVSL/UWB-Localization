@@ -293,6 +293,8 @@ class Jackal(object):
         else:
             odometry = np.zeros((4, len(range_data)))
 
+        res = least_squares(self.trilateration_function, [0, 0, 0, 0], args=(range_data, odometry))
+
         left = res.x[0:2]
         right = res.x[2:4]
 
@@ -304,7 +306,7 @@ class Jackal(object):
 
         return np.array([center[0], center[1], 0, 0, theta, 0])
 
-    def trilateration_function(self, x, distances):
+    def trilateration_function(self, x, distances, odometry_data):
         # x[0] = left_x
         # x[1] = left_y
         # x[2] = right_x
@@ -316,12 +318,17 @@ class Jackal(object):
             (x1 - x2) ** 2 + (y1 - y2) ** 2 - self.d ** 2,
         ]
 
-        for distance in distances:
+        for i, distance in enumerate(distances):
             anchor = distance['pose']
             tagID = distance['tagID']
             distance = distance['range']
 
-            z = self.loc.tag_offset[tagID][2]
+            odometry = odometry_data[i]
+            # 0 = x, 1 = y, 2 = z, 3 = theta
+
+            z = self.loc.tag_offset[tagID][2] + odometry[2]
+
+            xy = self.loc.tag_offset[tagID][:2]
 
             if tagID == self.left_tag:
                 x = x1
@@ -330,9 +337,28 @@ class Jackal(object):
                 x = x2
                 y = y2
 
+            x_point = x + odometry[0]
+            y_point = y + odometry[1]
+
+            # rotate = self.rotate(xy, odometry[3])
+            # x = x_point + rotate[0]
+            # y = y_point + rotate[1]
+
+            x = x_point
+            y = y_point
+
             residuals.append((x - anchor[0]) ** 2 + (y - anchor[1]) ** 2 + (z - anchor[2]) ** 2 - distance ** 2)
 
         return residuals
+
+    def rotate(self, xy, rot_angle):
+        c = np.cos(rot_angle)
+        s = np.sin(rot_angle)
+
+        result = np.matmul(np.array([[c, -s],
+                                     [s, c]]), xy)
+
+        return result
 
 
 if __name__ == "__main__":
