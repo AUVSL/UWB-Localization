@@ -15,8 +15,16 @@ import sys
 class PositionPlotter(object):
     def __init__(self, robot_name='jackal', position_links=None):
         if position_links is None:
-            position_links = ['/odometry/filtered', '/ground_truth/state', '/jackal/uwb/pose/0', '/jackal/uwb/pose/1',
-                              '/jackal/uwb/odom']
+            position_links = ['/ground_truth/state']
+
+            topic_names = rospy.get_published_topics()
+
+            for (topic, _) in topic_names:
+                if topic.endswith('uwb/odom') or topic.endswith('odometry/filtered'):
+                    position_links.append(topic)
+
+            print(position_links)
+
 
         self.live_plotter = LivePlotter(alpha=0.5)
         self.live_plotter.ax.set_aspect("equal")
