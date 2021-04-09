@@ -293,29 +293,23 @@ class Jackal(object):
         else:
             odometry = np.zeros((4, len(range_data)))
 
-        res = least_squares(self.trilateration_function, [0, 0, 0, 0], args=(range_data, odometry))
+        res = least_squares(self.trilateration_function, [0, 0, 0], args=(range_data, odometry))
 
-        left = res.x[0:2]
-        right = res.x[2:4]
+        res = res.x
 
-        center = (left + right) / 2
-        v_ab = left - right
-        theta = np.arccos(v_ab[1] / np.linalg.norm(v_ab))
+        return np.array([res[0], res[1], 0, 0, res[2], 0])
 
-        print(center, v_ab, theta, np.degrees(theta))
+    def trilateration_function(self, input_x, distances, odometry_data):
+        # x[0] = x_start
+        # x[1] = y_start
+        # x[2] = theta
 
-        return np.array([center[0], center[1], 0, 0, theta, 0])
+        _, _, theta = input_x
 
-    def trilateration_function(self, x, distances, odometry_data):
-        # x[0] = left_x
-        # x[1] = left_y
-        # x[2] = right_x
-        # x[3] = right_y
-
-        x1, y1, x2, y2 = x
+        xy = input_x[:2]
 
         residuals = [
-            (x1 - x2) ** 2 + (y1 - y2) ** 2 - self.d ** 2,
+            # (x1 - x2) ** 2 + (y1 - y2) ** 2 - self.d ** 2,
         ]
 
         for i, distance in enumerate(distances):
@@ -325,29 +319,17 @@ class Jackal(object):
 
             odometry = odometry_data[i]
             # 0 = x, 1 = y, 2 = z, 3 = theta
+            xy_odom = odometry[:2]
+            theta_odom = odometry[2]
 
-            z = self.loc.tag_offset[tagID][2] + odometry[2]
+            z = self.loc.tag_offset[tagID][2] + theta_odom
 
-            xy = self.loc.tag_offset[tagID][:2]
+            xy_tag = self.loc.tag_offset[tagID][:2]
 
-            if tagID == self.left_tag:
-                x = x1
-                y = y1
-            else:
-                x = x2
-                y = y2
+            xy_world = self.rotate(xy_odom, theta) + xy
+            xy_tag = self.rotate(xy_tag, theta + theta_odom) + xy_world
 
-            x_point = x + odometry[0]
-            y_point = y + odometry[1]
-
-            # rotate = self.rotate(xy, odometry[3])
-            # x = x_point + rotate[0]
-            # y = y_point + rotate[1]
-
-            # TODO If you add movement then you must also add global rotation
-
-            x = x_point
-            y = y_point
+            x, y = xy_tag
 
             residuals.append((x - anchor[0]) ** 2 + (y - anchor[1]) ** 2 + (z - anchor[2]) ** 2 - distance ** 2)
 
