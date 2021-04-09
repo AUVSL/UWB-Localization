@@ -3,15 +3,16 @@
 from __future__ import print_function
 
 import json
-import numpy as np
 import os
+
+import numpy as np
 import rospkg
 import rospy
 import tf
 from gtec_msgs.msg import Ranging
 from nav_msgs.msg import Odometry
 from scipy.optimize import least_squares
-from tf.transformations import euler_from_quaternion, euler_from_quaternion
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from visualization_msgs.msg import MarkerArray
 
 from ukf.datapoint import DataType, DataPoint
@@ -187,6 +188,13 @@ class UKFUWBLocalization(object):
         self.odom.pose.pose.position.z = z
         self.odom.twist.twist.linear.x = v
         self.odom.twist.twist.angular.z = yaw_rate
+
+        angles = quaternion_from_euler(0, 0, yaw)
+
+        self.odom.pose.pose.orientation.x = angles[0]
+        self.odom.pose.pose.orientation.y = angles[1]
+        self.odom.pose.pose.orientation.z = angles[2]
+        self.odom.pose.pose.orientation.w = angles[3]
 
         self.estimated_pose.publish(self.odom)
 
