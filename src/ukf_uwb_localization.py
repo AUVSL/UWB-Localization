@@ -25,7 +25,7 @@ def get_time():
 
 class UKFUWBLocalization(object):
     def __init__(self, uwb_std=1, odometry_std=(1, 1, 1, 1, 1, 1), accel_std=1, yaw_accel_std=1, alpha=1, beta=0,
-                 namespace=None, right_tag=0, left_tag=1):
+                 namespace=None, right_tag=0, left_tag=1, x_initial=0, y_initial=0, theta_initial=0):
         if namespace is None:
             namespace = '/'
 
@@ -79,8 +79,8 @@ class UKFUWBLocalization(object):
         self.sensor_data = []
 
         self.initialized = False
-        self.start_translation = np.zeros(2)
-        self.start_rotation = 0
+        self.start_translation = np.array([x_initial, y_initial])
+        self.start_rotation = theta_initial
 
         self.cache_data = []
 
