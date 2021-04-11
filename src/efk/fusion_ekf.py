@@ -1,6 +1,7 @@
 # coding=utf-8
-import numpy as np
 import time
+
+import numpy as np
 
 from kalman_filter import KalmanFilter
 

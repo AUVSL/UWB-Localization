@@ -226,14 +226,14 @@ class Jackal(object):
                 print(total_data_points)
                 if total_data_points > 50:
                     pose = self.trilaterate_position(recoreded_data['localized']['data'])
-                    
+
                     self.x_initial = pose[0]
                     self.y_initial = pose[1]
                     self.theta_initial = pose[4]
-                    
+
                     self.is_localized = True
 
-                    self.odometry_data = self.odometry_data + pose
+                    self.odometry_data += pose
 
                     latest_pose = self.odometry_data[-1]
 
@@ -326,10 +326,11 @@ class Jackal(object):
 
         for x_scale in [2, -2]:
             for y_scale in [2, -2]:
-                res = least_squares(self.trilateration_function, [x * x_scale, y * y_scale, z], args=(range_data, odometry))
+                res = least_squares(self.trilateration_function, [x * x_scale, y * y_scale, z],
+                                    args=(range_data, odometry))
                 scores.append([res.cost, res.x])
 
-        return min(scores, key=lambda x: x[0])[1]
+        return min(scores, key=lambda key: key[0])[1]
 
     def trilateration_function(self, input_x, distances, odometry_data):
         # x[0] = x_start

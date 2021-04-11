@@ -2,8 +2,9 @@
 # coding=utf-8
 from __future__ import print_function
 
-import rospy
 import sys
+
+import rospy
 import tf
 from geometry_msgs.msg import Point
 
