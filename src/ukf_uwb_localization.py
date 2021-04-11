@@ -179,7 +179,7 @@ class UKFUWBLocalization(object):
         for data in self.sensor_data:
             self.ukf.update(data)
 
-        del self.sensor_data[:]
+        self.clear_data()
 
         x, y, z, v, yaw, yaw_rate = self.ukf.x
 
@@ -198,6 +198,8 @@ class UKFUWBLocalization(object):
 
         self.estimated_pose.publish(self.odom)
 
+    def clear_data(self):
+        del self.sensor_data[:]
     def step(self, initial_P=None):
         if not self.initialized:
             d = np.linalg.norm(self.tag_offset[self.right_tag] - self.tag_offset[self.left_tag])
