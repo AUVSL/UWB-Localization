@@ -132,7 +132,7 @@ class Jackal(object):
                     "time": t,
                     "anchorID": msg.anchorId,
                     "tagID": msg.tagId,
-                    "range": msg.range / 1000,
+                    "range": msg.range / 1000.,
                     'localized': localized,
                     'pose': pose
                 }
