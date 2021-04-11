@@ -240,9 +240,10 @@ class Jackal(object):
                     self.loc.intialize(latest_pose, np.identity(6))
 
                     print(pose)
+                    print("Robot has been localized now moving to using robot UKF to localize")
             else:
-                # Go thorugh all the neighbors and ask if they can localize
-                #
+                # Go through all the neighbors and ask if they can localize
+                # Since unable to localize in world reference frame continue to use odometery for only relative motion
                 pass
 
         self.motion.step()
