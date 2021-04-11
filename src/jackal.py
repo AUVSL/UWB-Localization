@@ -291,7 +291,7 @@ class Jackal(object):
         if len(self.odometry_data) > len(range_data):
             odometry = self.find_closest_odometry(range_data)
         else:
-            odometry = np.zeros((4, len(range_data)))
+            odometry = np.zeros((len(range_data), 4))
 
         res = least_squares(self.trilateration_function, [0, 0, 0], args=(range_data, odometry))
 
