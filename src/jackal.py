@@ -237,6 +237,8 @@ class Jackal(object):
 
                     latest_pose = self.odometry_data[-1]
 
+                    self.loc.set_initial(self.x_initial, self.y_initial, self.theta_initial)
+                    self.loc.clear_data()
                     self.loc.intialize(latest_pose, np.identity(6))
 
                     print(pose)
