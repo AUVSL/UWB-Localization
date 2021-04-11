@@ -200,6 +200,11 @@ class UKFUWBLocalization(object):
 
     def clear_data(self):
         del self.sensor_data[:]
+
+    def set_initial(self, x_initial, y_initial, theta_initial):
+        self.start_translation = np.array([x_initial, y_initial])
+        self.start_rotation = theta_initial
+
     def step(self, initial_P=None):
         if not self.initialized:
             d = np.linalg.norm(self.tag_offset[self.right_tag] - self.tag_offset[self.left_tag])
