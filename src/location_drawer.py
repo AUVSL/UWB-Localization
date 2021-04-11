@@ -15,12 +15,12 @@ import sys
 class PositionPlotter(object):
     def __init__(self, robot_name='jackal', position_links=None):
         if position_links is None:
-            position_links = ['/ground_truth/state']
+            position_links = []
 
             topic_names = rospy.get_published_topics()
 
             for (topic, _) in topic_names:
-                if topic.endswith('uwb/odom') or topic.endswith('odometry/filtered'):
+                if topic.endswith('uwb/odom') or topic.endswith('odometry/filtered') or topic.endswith('ground_truth/state'):
                     position_links.append(topic)
 
             print(position_links)
