@@ -59,6 +59,10 @@ class Jackal(object):
         self.odom_times = None
         self.right_tag, self.left_tag, self.anchor = get_tag_ids(self.ns)
 
+        self.x_initial = 0
+        self.y_initial = 0
+        self.theta_initial = 0
+
         _, self.tag_to_robot, self.anchor_to_robot = self.get_tags()
 
         print("Namespace:", self.ns)
@@ -143,8 +147,8 @@ class Jackal(object):
 
         t = get_time()
 
-        px = msg.pose.pose.position.x
-        py = msg.pose.pose.position.y
+        px = msg.pose.pose.position.x + self.x_initial
+        py = msg.pose.pose.position.y + self.y_initial
         pz = msg.pose.pose.position.z
 
         v = msg.twist.twist.linear.x
@@ -155,7 +159,7 @@ class Jackal(object):
             msg.pose.pose.orientation.w
         ))[2]
 
-        theta_yaw = msg.twist.twist.angular.z
+        theta_yaw = msg.twist.twist.angular.z + self.theta_initial
 
         # print(t, px, py, pz, v, theta, theta_yaw)
         # print(self.odometry_data.dtype)
@@ -222,8 +226,18 @@ class Jackal(object):
                 print(total_data_points)
                 if total_data_points > 50:
                     pose = self.trilaterate_position(recoreded_data['localized']['data'])
+                    
+                    self.x_initial = pose[0]
+                    self.y_initial = pose[1]
+                    self.theta_initial = pose[4]
+                    
                     self.is_localized = True
-                    self.loc.intialize(pose, np.identity(6))
+
+                    self.odometry_data = self.odometry_data + pose
+
+                    latest_pose = self.odometry_data[-1]
+
+                    self.loc.intialize(latest_pose, np.identity(6))
 
                     print(pose)
             else:
