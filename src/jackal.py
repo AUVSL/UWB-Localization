@@ -41,7 +41,7 @@ class Jackal(object):
             if values['left_tag'] not in tag_to_robot or tag_to_robot[values['left_tag']] == '/':
                 tag_to_robot[values['left_tag']] = key
 
-            if values['anchor'] not in tag_to_robot or tag_to_robot[values['anchor']] == '/':
+            if values['anchor'] not in anchor_to_robot or anchor_to_robot[values['anchor']] == '/':
                 anchor_to_robot[values['anchor']] = key
 
         return tag_data, tag_to_robot, anchor_to_robot
