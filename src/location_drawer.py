@@ -20,11 +20,11 @@ class PositionPlotter(object):
             topic_names = rospy.get_published_topics()
 
             for (topic, _) in topic_names:
-                if topic.endswith('uwb/odom') or topic.endswith('odometry/filtered') or topic.endswith('ground_truth/state'):
+                if topic.endswith('uwb/odom') or topic.endswith('odometry/filtered') or topic.endswith(
+                        'ground_truth/state'):
                     position_links.append(topic)
 
             print(position_links)
-
 
         self.live_plotter = LivePlotter(alpha=0.5)
         self.live_plotter.ax.set_aspect("equal")
