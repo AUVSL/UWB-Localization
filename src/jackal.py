@@ -309,9 +309,24 @@ class Jackal(object):
 
         res = least_squares(self.trilateration_function, [0, 0, 0], args=(range_data, odometry))
 
-        res = res.x
+        if res.cost > 50:
+            local_mininum = self.check_for_local_mininum(res, range_data, odometry)
+        else:
+            local_mininum = res.x
 
-        return np.array([res[0], res[1], 0, 0, res[2], 0])
+        return np.array([local_mininum[0], local_mininum[1], 0, 0, local_mininum[2], 0])
+
+    def check_for_local_mininum(self, current_min_sol, range_data, odometry):
+        x, y, z = current_min_sol.x
+
+        scores = [[current_min_sol.cost, current_min_sol.x]]
+
+        for x_scale in [2, -2]:
+            for y_scale in [2, -2]:
+                res = least_squares(self.trilateration_function, [x * x_scale, y * y_scale, z], args=(range_data, odometry))
+                scores.append([res.cost, res.x])
+
+        return min(scores, key=lambda x: x[0])[1]
 
     def trilateration_function(self, input_x, distances, odometry_data):
         # x[0] = x_start
