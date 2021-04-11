@@ -246,7 +246,7 @@ class Jackal(object):
                 pass
 
         self.motion.step()
-        rospy.set_param(Jackal.localized_param_key, self.is_localized)
+        rospy.set_param(self.ns + Jackal.localized_param_key, self.is_localized)
 
     def find_closest_odometry(self, range_data):
         closest = np.zeros((len(range_data), 4))
