@@ -320,9 +320,9 @@ class Jackal(object):
             odometry = odometry_data[i]
             # 0 = x, 1 = y, 2 = z, 3 = theta
             xy_odom = odometry[:2]
-            theta_odom = odometry[2]
+            theta_odom = odometry[3]
 
-            z = self.loc.tag_offset[tagID][2] + theta_odom
+            z = self.loc.tag_offset[tagID][2] + odometry[2]
 
             xy_tag = self.loc.tag_offset[tagID][:2]
 
