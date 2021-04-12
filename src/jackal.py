@@ -226,6 +226,18 @@ class Jackal(object):
         if self.is_localized or self.time_override:
             self.loc.step()
             self.start_time = None
+
+            if self.time_override:
+                recoreded_data = self.explore_recorded_data()
+
+                total_knowns = len(set(recoreded_data['localized']['robots']))
+
+                if total_knowns >= Jackal.num_known_anchor_tolerance:
+                    total_data_points = len(recoreded_data['localized']['data'])
+
+                    if total_data_points >  Jackal.num_datapoint_num_tolerance:
+                        self.time_override = False
+
         else:
             if self.start_time is None:
                 self.start_time = rospy.Time.now()
