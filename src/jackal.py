@@ -46,7 +46,7 @@ class Jackal(object):
 
         return tag_data, tag_to_robot, anchor_to_robot
 
-    def __init__(self):
+    def __init__(self, timeout_duration=5):
         p = [1.0001, 11.0, 14.0001, 20.9001, 1.0001, 0.0001, 0.0001, 3.9001, 4.9001, 1.0, 0, 0.0001, 0.0001, 0.0001,
              2.0001, 0.0001, 0.0001]
 
@@ -58,6 +58,10 @@ class Jackal(object):
         self.odometry_data = None
         self.odom_times = None
         self.right_tag, self.left_tag, self.anchor = get_tag_ids(self.ns)
+
+        self.start_time = None
+        self.delta_t = rospy.Duration(timeout_duration)
+        self.time_override = False
 
         self.x_initial = 0
         self.y_initial = 0
@@ -213,9 +217,18 @@ class Jackal(object):
         pass
 
     def step(self):
-        if self.is_localized:
+        if self.is_localized or self.time_override:
             self.loc.step()
+            self.start_time = None
         else:
+            if self.start_time is None:
+                self.start_time = rospy.Time.now()
+            else:
+                self.time_override = (rospy.Time.now() - self.start_time) > self.delta_t
+
+                if self.time_override:
+                    self.setup_ukf(np.zeros(6))
+
             recoreded_data = self.explore_recorded_data()
 
             total_knowns = len(set(recoreded_data['localized']['robots']))
