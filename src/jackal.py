@@ -237,9 +237,7 @@ class Jackal(object):
 
                     latest_pose = self.odometry_data[-1]
 
-                    self.loc.set_initial(self.x_initial, self.y_initial, self.theta_initial)
-                    self.loc.clear_data()
-                    self.loc.intialize(latest_pose, np.identity(6))
+                    self.setup_ukf(latest_pose)
 
                     print(pose)
                     print("Robot has been localized now moving to using robot UKF to localize")
@@ -250,6 +248,11 @@ class Jackal(object):
 
         self.motion.step()
         rospy.set_param(self.ns + Jackal.localized_param_key, self.is_localized)
+
+    def setup_ukf(self, initial_x):
+        self.loc.set_initial(self.x_initial, self.y_initial, self.theta_initial)
+        self.loc.clear_data()
+        self.loc.intialize(initial_x, np.identity(6))
 
     def find_closest_odometry(self, range_data):
         closest = np.zeros((len(range_data), 4))
