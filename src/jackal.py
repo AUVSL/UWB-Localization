@@ -215,6 +215,10 @@ class Jackal(object):
 
     def spread_message(self, ns):
         pass
+    def spread_message(self, robots):
+        for robot in robots:
+            # rospy.Publisher()
+            pass
 
     def step(self):
         if self.is_localized or self.time_override:
@@ -256,7 +260,7 @@ class Jackal(object):
                     print(pose)
                     print("Robot has been localized now moving to using robot UKF to localize")
             else:
-                # Go through all the neighbors and ask if they can localize
+                self.spread_message(set(recoreded_data['unlocalized']['robots']))
                 # Since unable to localize in world reference frame continue to use odometery for only relative motion
                 pass
 
