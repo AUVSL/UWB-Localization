@@ -227,6 +227,7 @@ class Jackal(object):
                 self.time_override = (rospy.Time.now() - self.start_time) > self.delta_t
 
                 if self.time_override:
+                    print("Time overriden")
                     self.setup_ukf(np.zeros(6))
 
             recoreded_data = self.explore_recorded_data()
