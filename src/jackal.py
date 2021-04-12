@@ -20,6 +20,8 @@ from ukf_uwb_localization import UKFUWBLocalization, get_tag_ids, get_time
 class Jackal(object):
     localized_param_key = "is_localized"
     jackal_publish_path = 'uwb/odom'
+    num_known_anchor_tolerance = 3
+    num_datapoint_num_tolerance = 50
 
     def get_tags(self, tags_file="tag_ids.json"):
         rospack = rospkg.RosPack()
@@ -238,11 +240,10 @@ class Jackal(object):
 
             total_knowns = len(set(recoreded_data['localized']['robots']))
 
-            if total_knowns >= 3:
+            if total_knowns >= Jackal.num_known_anchor_tolerance:
                 total_data_points = len(recoreded_data['localized']['data'])
 
-                print(total_data_points)
-                if total_data_points > 50:
+                if total_data_points > Jackal.num_datapoint_num_tolerance:
                     pose = self.trilaterate_position(recoreded_data['localized']['data'])
 
                     self.x_initial = pose[0]
