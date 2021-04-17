@@ -232,7 +232,12 @@ class Jackal(object):
 
                 total_knowns = len(set(recoreded_data['localized']['robots']))
 
-                if total_knowns >= Jackal.num_known_anchor_tolerance:
+                total_unique_poses = 0
+
+                if len(recoreded_data['localized']['data']) > 0:
+                    total_unique_poses = np.unique(np.array([np.round(d['pose'], 1) for d in  recoreded_data['localized']['data']]), axis=0).shape[0]
+
+                if total_knowns >= Jackal.num_known_anchor_tolerance or (total_unique_poses - total_knowns) * 2 >= Jackal.num_known_anchor_tolerance:
                     total_data_points = len(recoreded_data['localized']['data'])
 
                     if total_data_points >  Jackal.num_datapoint_num_tolerance:
@@ -252,7 +257,14 @@ class Jackal(object):
 
             total_knowns = len(set(recoreded_data['localized']['robots']))
 
-            if total_knowns >= Jackal.num_known_anchor_tolerance:
+            total_unique_poses = 0
+
+            if len(recoreded_data['localized']['data']) > 0:
+                total_unique_poses = np.unique(np.array([np.round(d['pose'], 1) for d in  recoreded_data['localized']['data']]), axis=0)
+                # print(total_unique_poses.shape[0])
+                total_unique_poses = total_unique_poses.shape[0]
+
+            if total_knowns >= Jackal.num_known_anchor_tolerance or (total_unique_poses - total_knowns) * 2 >= Jackal.num_known_anchor_tolerance:
                 total_data_points = len(recoreded_data['localized']['data'])
 
                 if total_data_points > Jackal.num_datapoint_num_tolerance:
