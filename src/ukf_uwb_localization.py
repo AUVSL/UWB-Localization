@@ -23,6 +23,24 @@ def get_time():
     return rospy.Time.now().to_nsec()
 
 
+def get_anchors(tags_file="tag_ids.json"):
+    rospack = rospkg.RosPack()
+    package_location = rospack.get_path('uwb_localization')
+
+    tags_file = os.path.join(package_location, 'src', tags_file)
+
+    with open(tags_file, 'r') as f:
+        tag_data = json.load(f)
+
+    anchor_to_robot = dict()
+
+    for key, values in tag_data.items():
+        if values['anchor'] not in anchor_to_robot or anchor_to_robot[values['anchor']] == '/':
+            anchor_to_robot[values['anchor']] = key
+
+    return anchor_to_robot
+
+
 class UKFUWBLocalization(object):
     def __init__(self, uwb_std=1, odometry_std=(1, 1, 1, 1, 1, 1), accel_std=1, yaw_accel_std=1, alpha=1, beta=0,
                  namespace=None, right_tag=0, left_tag=1, x_initial=0, y_initial=0, theta_initial=0):
@@ -43,6 +61,7 @@ class UKFUWBLocalization(object):
         self.namespace = namespace
         self.right_tag = right_tag
         self.left_tag = left_tag
+        self.anchor_to_robot = get_anchors()
 
         self.ukf = FusionUKF(sensor_std, accel_std, yaw_accel_std, alpha, beta)
 
@@ -152,11 +171,26 @@ class UKFUWBLocalization(object):
             self.anchor_poses[marker.id] = np.array(
                 [marker.pose.position.x, marker.pose.position.y, marker.pose.position.z])
 
+    def is_localized(self, robot_name):
+        parameter_name = robot_name + "is_localized"
+
+        if rospy.has_param(parameter_name):
+            return  rospy.get_param(parameter_name)
+        else:
+            return True
+
     def add_ranging(self, msg):
         # type: (Ranging) -> None
         t = get_time()
 
+        if not self.is_localized(self.namespace):
+            return
+
         if msg.anchorId in self.anchor_poses:
+            if msg.anchorId in self.anchor_to_robot:
+                if not self.is_localized(self.anchor_to_robot[msg.anchorId]):
+                    return
+
             if msg.tagId in self.tag_offset:
                 anchor_pose = self.anchor_poses[msg.anchorId]
                 anchor_distance = msg.range / 1000.
