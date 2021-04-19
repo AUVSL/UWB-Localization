@@ -48,7 +48,7 @@ class Jackal(object):
 
         return tag_data, tag_to_robot, anchor_to_robot
 
-    def __init__(self, timeout_duration=5):
+    def __init__(self, timeout_duration=5, auto_position_checker_dt=-1):
         p = [1.0001, 11.0, 14.0001, 20.9001, 1.0001, 0.0001, 0.0001, 3.9001, 4.9001, 1.0, 0, 0.0001, 0.0001, 0.0001,
              2.0001, 0.0001, 0.0001]
 
@@ -64,6 +64,9 @@ class Jackal(object):
         self.start_time = None
         self.delta_t = rospy.Duration(timeout_duration)
         self.time_override = False
+
+        self.auto_position_checker_dt = auto_position_checker_dt
+        self.checker_start_time = None
 
         self.x_initial = 0
         self.y_initial = 0
@@ -243,6 +246,42 @@ class Jackal(object):
 
                     if total_data_points >  Jackal.num_datapoint_num_tolerance:
                         self.time_override = False
+            elif self.auto_position_checker_dt > 0:
+                t = rospy.get_rostime().secs
+
+                # print(t, self.checker_start_time, self.auto_position_checker_dt )
+
+                if self.checker_start_time is None:
+                    self.checker_start_time = t
+                elif (t - self.checker_start_time) > self.auto_position_checker_dt:
+                    self.checker_start_time = t
+
+                    data = self.explore_recorded_data()['localized']['data']
+
+                    sub = np.array((self.x_initial, self.y_initial, 0, 0, self.theta_initial, 0))
+
+                    print("Caculating")
+                    self.odometry_data -= sub                    
+                    result, cost = self.trilaterate_position(data, (self.x_initial, self.y_initial, self.theta_initial))
+                    self.odometry_data += sub
+
+                    print("Current", np.array((self.x_initial, self.y_initial, self.theta_initial)), "Current Error", self.trilateration_error ,"Result", result, "Error", cost)
+
+                    if cost < self.trilateration_error:
+                        self.odometry_data -= np.array((self.x_initial, self.y_initial, 0, 0, self.theta_initial, 0))
+
+                        self.trilateration_error = cost
+
+                        self.x_initial = result[0]
+                        self.y_initial = result[1]
+                        self.theta_initial = result[4]
+
+                        self.odometry_data += result
+
+                        latest_pose = self.odometry_data[-1]
+
+                        self.setup_ukf(latest_pose)
+
 
         else:
             if self.start_time is None:
