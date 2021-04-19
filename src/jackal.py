@@ -350,13 +350,13 @@ class Jackal(object):
             return idx - 1, idx
         return idx, idx + 1
 
-    def trilaterate_position(self, range_data):
+    def trilaterate_position(self, range_data, initial_pose=(0,0,0)):
         if len(self.odometry_data) > len(range_data):
             odometry = self.find_closest_odometry(range_data)
         else:
             odometry = np.zeros((len(range_data), 4))
 
-        res = least_squares(self.trilateration_function, [0, 0, 0], args=(range_data, odometry))
+        res = least_squares(self.trilateration_function, initial_pose, args=(range_data, odometry))        
 
         if res.cost > 50:
             local_mininum = self.check_for_local_mininum(res, range_data, odometry)
