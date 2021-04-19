@@ -68,6 +68,7 @@ class Jackal(object):
         self.x_initial = 0
         self.y_initial = 0
         self.theta_initial = 0
+        self.trilateration_error = 0
 
         _, self.tag_to_robot, self.anchor_to_robot = self.get_tags()
 
@@ -268,7 +269,7 @@ class Jackal(object):
                 total_data_points = len(recoreded_data['localized']['data'])
 
                 if total_data_points > Jackal.num_datapoint_num_tolerance:
-                    pose = self.trilaterate_position(recoreded_data['localized']['data'])
+                    pose, self.trilateration_error = self.trilaterate_position(recoreded_data['localized']['data'])
 
                     self.x_initial = pose[0]
                     self.y_initial = pose[1]
@@ -359,24 +360,30 @@ class Jackal(object):
         res = least_squares(self.trilateration_function, initial_pose, args=(range_data, odometry))        
 
         if res.cost > 50:
-            local_mininum = self.check_for_local_mininum(res, range_data, odometry)
+            local_mininum, error = self.check_for_local_mininum(res, range_data, odometry)
         else:
             local_mininum = res.x
+            error = self.rmse(res.fun)
 
-        return np.array([local_mininum[0], local_mininum[1], 0, 0, local_mininum[2], 0])
+        return np.array([local_mininum[0], local_mininum[1], 0, 0, local_mininum[2], 0]), error
+
+    def rmse(self, residuals):
+        return np.sqrt(np.mean((residuals)**2))
 
     def check_for_local_mininum(self, current_min_sol, range_data, odometry):
         x, y, z = current_min_sol.x
 
-        scores = [[current_min_sol.cost, current_min_sol.x]]
+        scores = [[current_min_sol.cost, current_min_sol.x, self.rmse(current_min_sol.fun)]]
 
         for x_scale in [2, -2]:
             for y_scale in [2, -2]:
                 res = least_squares(self.trilateration_function, [x * x_scale, y * y_scale, z],
                                     args=(range_data, odometry))
-                scores.append([res.cost, res.x])
+                scores.append([res.cost, res.x, self.rmse(res.fun)])
 
-        return min(scores, key=lambda key: key[0])[1]
+        min_result = min(scores, key=lambda key: key[0])
+
+        return min_result[1], min_result[2]
 
     def trilateration_function(self, input_x, distances, odometry_data):
         # x[0] = x_start
