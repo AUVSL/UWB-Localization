@@ -75,6 +75,8 @@ class Jackal(object):
 
         _, self.tag_to_robot, self.anchor_to_robot = self.get_tags()
 
+        self.other_odometry = dict()
+
         print("Namespace:", self.ns)
 
         self.is_localized = False
@@ -108,6 +110,40 @@ class Jackal(object):
         odometry_sub = rospy.Subscriber(odometry, Odometry, callback=self.add_odometry)
 
         self.motion = JackalMotion(self.ns)
+
+    def create_other_robot_odometry_recorder(self, robot_name):
+        def add_odometry(msg):
+            # type: (Odometry) -> None
+
+            t = get_time()
+
+            px = msg.pose.pose.position.x
+            py = msg.pose.pose.position.y
+            pz = msg.pose.pose.position.z
+
+            v = msg.twist.twist.linear.x
+            theta = euler_from_quaternion((
+                msg.pose.pose.orientation.x,
+                msg.pose.pose.orientation.y,
+                msg.pose.pose.orientation.z,
+                msg.pose.pose.orientation.w
+            ))[2]
+
+            theta_yaw = msg.twist.twist.angular.z
+
+            if self.other_odometry[robot_name]['data'] is None:
+                self.odometry_data[robot_name]['data'] = np.array((px, py, pz, v, theta, theta_yaw))
+            else:
+                self.odometry_data[robot_name]['data'] = np.vstack((self.odometry_data[robot_name]['data'], (px, py, pz, v, theta, theta_yaw)))
+            if self.odometry_data[robot_name]['time'] is None:
+                self.odometry_data[robot_name]['time'] = np.array([t], dtype=np.uint64)
+            else:
+                self.odometry_data[robot_name]['time'] = np.append(self.odometry_data[robot_name]['time'], t)
+        
+        self.odometry_data[robot_name]['data'] = None
+        self.odometry_data[robot_name]['time'] = None
+
+        self.other_odometry[robot_name]['sub'] = rospy.Subscriber(robot_name + "odometry/filtered", Odometry, callback=add_odometry)
 
     def add_anchors(self, msg):
         # type: (MarkerArray) -> None
