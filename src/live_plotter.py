@@ -43,7 +43,8 @@ class LivePlotter(object):
     def func_animate(self, i):
         try:
             if self.time_removal is None or i < self.time_removal:
-                if self.time_removal is not None:
+                # if self.time_removal is not None:
+                #     print(i)
 
                 self.ax.legend(loc=self.legend_loc, fontsize=self.font_size)
             else:
