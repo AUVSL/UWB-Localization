@@ -7,9 +7,10 @@ from ukf.util import normalize
 
 
 class StateUpdater(object):
-    def __init__(self, NX, N_SIGMA, WEIGHTS):
+    def __init__(self, NX, N_SIGMA, WEIGHTS_M, WEIGHTS_C):
+        self.WEIGHTS_C = WEIGHTS_C
         self.N_SIGMA = N_SIGMA
-        self.WEIGHTS = WEIGHTS
+        self.WEIGHTS_M = WEIGHTS_M
         self.NX = NX
         self.x = None
         self.P = None
@@ -24,7 +25,7 @@ class StateUpdater(object):
 
         normalize(dz, UKFState.YAW)
 
-        return np.matmul(self.WEIGHTS * dx, dz)
+        return np.matmul(self.WEIGHTS_C * dx, dz)
 
     def update(self, z, S, Tc, predicted_z, predicted_x, predicted_P, data_type):
         Si = np.linalg.inv(S)

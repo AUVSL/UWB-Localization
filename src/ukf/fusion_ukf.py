@@ -7,7 +7,7 @@ from ukf.state_updater import StateUpdater
 
 
 class FusionUKF(object):
-    def __init__(self, sensor_std, speed_noise_std=.9, yaw_rate_noise_std=.6, alpha=1, beta=0):
+    def __init__(self, sensor_std, speed_noise_std=.9, yaw_rate_noise_std=.6, alpha=1, beta=0, k=None):
         # ODOMETRY: beta=0.3
         # UWB: beta=0.3
 
@@ -17,17 +17,28 @@ class FusionUKF(object):
         # Number of total states X, Y, Z, velocity, yaw, yaw rate
         self.NX = 6
 
+
         # Settings values -----------------------------------
         self.N_AUGMENTED = self.NX + 2
+
+        if k is None:
+            self.K = 3 - self.N_AUGMENTED
+        else:
+            self.K = k
+
         self.N_SIGMA = self.N_AUGMENTED * 2 + 1
         self.ALPHA = alpha
-        self.LAMBDA = (self.ALPHA ** 2) * (self.NX + 3 - self.N_AUGMENTED) - self.NX
+        self.LAMBDA = (self.ALPHA ** 2) * (self.NX + self.K) - self.NX
         self.SCALE = np.sqrt(self.LAMBDA + self.N_AUGMENTED)
         self.W = 0.5 / (self.LAMBDA + self.N_AUGMENTED)
-        self.W0 = self.LAMBDA / (self.LAMBDA + self.N_AUGMENTED) + (1 - alpha ** 2 + beta)
+        self.W0_M = self.LAMBDA / (self.LAMBDA + self.N_AUGMENTED)
+        self.W0_C = self.LAMBDA / (self.LAMBDA + self.N_AUGMENTED) + (1 - alpha ** 2 + beta)
 
-        self.WEIGHTS = np.full(self.N_SIGMA, self.W)
-        self.WEIGHTS[0] = self.W0
+        self.WEIGHTS_M = np.full(self.N_SIGMA, self.W)
+        self.WEIGHTS_M[0] = self.W0_M
+
+        self.WEIGHTS_C = np.full(self.N_SIGMA, self.W)
+        self.WEIGHTS_C[0] = self.W0_C
         # -----------------------------------
 
         # Uncertainty Settings -----------------------------------
@@ -51,11 +62,11 @@ class FusionUKF(object):
         self.nis = 0
 
         self.state_predictor = StatePredictor(self.NX, self.N_SIGMA, self.N_AUGMENTED, self.SPEED_NOISE_VAR,
-                                              self.YAW_RATE_NOISE_VAR, self.SCALE, self.WEIGHTS)
+                                              self.YAW_RATE_NOISE_VAR, self.SCALE, self.WEIGHTS_M, self.WEIGHTS_C)
 
-        self.measurement_predictor = MeasurementPredictor(sensor_std, self.N_SIGMA, self.WEIGHTS)
+        self.measurement_predictor = MeasurementPredictor(sensor_std, self.N_SIGMA, self.WEIGHTS_M, self.WEIGHTS_C)
 
-        self.state_updater = StateUpdater(self.NX, self.N_SIGMA, self.WEIGHTS)
+        self.state_updater = StateUpdater(self.NX, self.N_SIGMA, self.WEIGHTS_M, self.WEIGHTS_C)
 
     def initialize(self, x, initial_p, timestamp):
         self.x[:x.size] = x

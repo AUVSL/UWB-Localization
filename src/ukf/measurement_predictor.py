@@ -7,12 +7,13 @@ from ukf.util import normalize
 
 
 class MeasurementPredictor(object):
-    def __init__(self, sensor_std, N_SIGMA, WEIGHTS):
+    def __init__(self, sensor_std, N_SIGMA, WEIGHTS_M, WEIGHTS_C):
+        self.WEIGHTS_C = WEIGHTS_C
         self.sensor_std = sensor_std
 
         self.compute_R_matrix()
 
-        self.WEIGHTS = WEIGHTS
+        self.WEIGHTS_M = WEIGHTS_M
         self.N_SIGMA = N_SIGMA
 
         self.z = None
@@ -76,7 +77,7 @@ class MeasurementPredictor(object):
         return sigma
 
     def compute_z(self, sigma):
-        return np.dot(sigma, self.WEIGHTS)
+        return np.dot(sigma, self.WEIGHTS_M)
 
     def compute_S(self, sigma, z):
         sub = np.subtract(sigma.T, z).T
@@ -84,7 +85,7 @@ class MeasurementPredictor(object):
         if self.current_type == DataType.ODOMETRY:
             normalize(sub, UKFState.YAW)
 
-        return (np.matmul(self.WEIGHTS * sub, sub.T)) + self.R
+        return (np.matmul(self.WEIGHTS_C * sub, sub.T)) + self.R
 
     def process(self, sigma_x, data):
         self.initialize(data)

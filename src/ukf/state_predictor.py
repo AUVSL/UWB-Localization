@@ -6,8 +6,9 @@ from ukf.util import normalize
 
 
 class StatePredictor(object):
-    def __init__(self, NX, N_SIGMA, N_AUGMENTED, VAR_SPEED_NOISE, VAR_YAW_RATE_NOISE, SCALE, WEIGHTS):
-        self.WEIGHTS = WEIGHTS
+    def __init__(self, NX, N_SIGMA, N_AUGMENTED, VAR_SPEED_NOISE, VAR_YAW_RATE_NOISE, SCALE, WEIGHTS_M, WEIGHTS_C):
+        self.WEIGHTS_M = WEIGHTS_M
+        self.WEIGHTS_C = WEIGHTS_C
         self.NX = NX
         self.SCALE = SCALE
         self.N_SIGMA = N_SIGMA
@@ -101,14 +102,14 @@ class StatePredictor(object):
         return predicted_sigma
 
     def predict_x(self, predicted_sigma):
-        return np.dot(predicted_sigma, self.WEIGHTS)
+        return np.dot(predicted_sigma, self.WEIGHTS_M)
 
     def predict_P(self, predicted_sigma, predicted_x):
         sub = np.subtract(predicted_sigma.T, predicted_x).T
 
         normalize(sub, UKFState.YAW)
 
-        return np.matmul(self.WEIGHTS * sub, sub.T)
+        return np.matmul(self.WEIGHTS_C * sub, sub.T)
 
     def process(self, x, P, dt):
         augmented_sigma = self.compute_augmented_sigma(x, P)
