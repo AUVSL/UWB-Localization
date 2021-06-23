@@ -3,6 +3,7 @@ class DataType(object):
     LIDAR = 1
     ODOMETRY = 2
     UWB = 3
+    IMU = 4
     GROUND_TRUTH = 0
 
 
