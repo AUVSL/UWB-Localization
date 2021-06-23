@@ -16,6 +16,7 @@ class RangePlotter(object):
     def __init__(self, tags=None, n=-1):
         toa_ranging = '/gtec/toa/ranging'
 
+        # self.live_plotter = LivePlotter(window_name="Range Drawer", lengend_loc="upper left", font_size='xx-small')
         self.live_plotter = LivePlotter(window_name="Range Drawer")
 
         self.n = n

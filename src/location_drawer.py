@@ -26,6 +26,7 @@ class PositionPlotter(object):
 
             print(position_links)
 
+        # self.live_plotter = LivePlotter(alpha=0.5, window_name="Location Drawer", time_removal=750, font_size='x-small')
         self.live_plotter = LivePlotter(alpha=0.5, window_name="Location Drawer")
         self.live_plotter.ax.set_aspect("equal")
 
