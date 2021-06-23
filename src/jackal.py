@@ -255,8 +255,9 @@ class Jackal(object):
 
         return rospy.has_param(parameter_name) and rospy.get_param(parameter_name)
 
-    def spread_message(self, ns):
-        pass
+    def stop(self):
+        self.motion.v = 0
+
     def spread_message(self, robots):
         for robot in robots:
             # rospy.Publisher()
@@ -271,6 +272,7 @@ class Jackal(object):
                 recoreded_data = self.explore_recorded_data()
 
                 total_knowns = len(set(recoreded_data['localized']['robots']))
+                # print(total_knowns)
 
                 total_unique_poses = 0
 
@@ -340,8 +342,11 @@ class Jackal(object):
                 # print(total_unique_poses.shape[0])
                 total_unique_poses = total_unique_poses.shape[0]
 
+                # print(total_knowns, total_unique_poses)
+
             if total_knowns >= Jackal.num_known_anchor_tolerance or (total_unique_poses - total_knowns) * 2 >= Jackal.num_known_anchor_tolerance:
                 total_data_points = len(recoreded_data['localized']['data'])
+                # print(total_data_points)
 
                 if total_data_points > Jackal.num_datapoint_num_tolerance:
                     pose, self.trilateration_error = self.trilaterate_position(recoreded_data['localized']['data'])
@@ -431,6 +436,22 @@ class Jackal(object):
             odometry = self.find_closest_odometry(range_data)
         else:
             odometry = np.zeros((len(range_data), 4))
+
+        # import json
+
+        # np.save("/home/marius/catkin_ws/src/uwb_localization/odometry", odometry)
+
+        # print(odometry)
+        # print(self.odom_times)
+        # print(self.odometry_data)
+
+        # new_d = range_data
+
+        # for i in range(len(new_d)):
+        #     new_d[i]['pose'] = new_d[i]['pose'].tolist()
+
+        # json.dump( new_d, open("/home/marius/catkin_ws/src/uwb_localization/range_data.json", 'w'), )
+        # print("range_data.json")
 
         res = least_squares(self.trilateration_function, initial_pose, args=(range_data, odometry))        
 
