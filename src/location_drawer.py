@@ -56,14 +56,14 @@ class PositionPlotter(object):
     def create_position_subscriber_func(self, name):
         """
         Helper factory function to create an odometry and live plotter data adder
-        @param name:
-        @return:
+        @param name: Name of the topic name
+        @return: return the custom pose addition software
         """
         def add_pose(msg):
             # type: (Odometry) -> None
             """
-            Extracts the position x,y values from the Odometry msg and adds it to the live plotter
-            @param msg:
+            Extracts the position x, y values from the Odometry msg and adds it to the live plotter
+            @param msg: the Odometry pose to process
             """
 
             x = msg.pose.pose.position.x
@@ -77,7 +77,7 @@ class PositionPlotter(object):
         """
         Deprecated
         Added robot position
-        @param msg:
+        @param msg: the Odometry pose
         """
         self.live_plotter.add_data_point(self.robot_name, msg.x, msg.y)
 
