@@ -12,7 +12,14 @@ from efk.fusion_ekf import FusionEKF
 
 
 class UWBLocalization(object):
+    """
+    A deprecated localization node using an EKF which estimates the position of the left and right tags seperately
+    """
+
     def __init__(self):
+        """
+        Setups the EKF localization of the tags
+        """
         self.kalman_filter_tag_0 = FusionEKF()
         self.kalman_filter_tag_1 = FusionEKF()
 
@@ -35,6 +42,14 @@ class UWBLocalization(object):
         self.tf_listener = tf.TransformListener()
 
     def change_pose_ref(self, odom, tag, world='/world', base='/base_link'):
+        """
+        Retrieves the tf tag for the robot and then translates the odom position
+        @param odom: The odometry that needs to be translated
+        @param tag: The name of the tag to use i.e. /right_tag
+        @param world: The base reference frame
+        @param base: the transformed reference frame
+        @return: the translated reference frame
+        """
         try:
             (trans, rot) = self.tf_listener.lookupTransform(world, tag, rospy.Time(0))
 
@@ -56,6 +71,10 @@ class UWBLocalization(object):
 
     def add_anchors(self, msg):
         # type: (MarkerArray) -> None
+        """
+        Function that handles the MarkerArray of anchor positions and updates the anchor pose dict
+        @param msg: the MarkerArray topic message
+        """
 
         for marker in msg.markers:
             self.anchor_poses[marker.id] = np.array(
@@ -63,6 +82,10 @@ class UWBLocalization(object):
 
     def add_ranging(self, msg):
         # type: (Ranging) -> None
+        """
+        Function that handles UWB range data and processes it through the Kalman filter
+        @param msg: The Ranging topic message
+        """
 
         if msg.anchorId in self.anchor_poses:
             anchor_pose = self.anchor_poses[msg.anchorId]
@@ -74,6 +97,10 @@ class UWBLocalization(object):
                 self.kalman_filter_tag_1.process_measurement(anchor_pose, anchor_distance)
 
     def run(self):
+        """
+        The step function that publishes the position information of the tags
+        @return:
+        """
         rate = rospy.Rate(60)
 
         while not rospy.is_shutdown():
