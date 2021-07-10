@@ -24,6 +24,12 @@ class Jackal(object):
     num_datapoint_num_tolerance = 50
 
     def get_tags(self, tags_file="tag_ids.json"):
+        """
+        Returns the recorded associated robots with each anchor id and tag id for each of the UWB sensors.
+        @param tags_file: the json file to read to load the data
+        @return: Returns the base json file as a dict, the inverted tag dict that has the tag id as the key and the
+        robot as value, the inverted anchor dict that has the anchor id as the key and the robot as value
+        """
         rospack = rospkg.RosPack()
         package_location = rospack.get_path('uwb_localization')
 
@@ -49,6 +55,14 @@ class Jackal(object):
         return tag_data, tag_to_robot, anchor_to_robot
 
     def __init__(self, timeout_duration=5, auto_position_checker_dt=-1):
+        """
+        The constructor for the Jackal robot pose estimator
+        @param timeout_duration: During the initial pose estimation if there is not enough data to estimate the pose,
+        the timeout time before the robot only uses relative positioning
+        @param auto_position_checker_dt: In the case that there is a huge gap between the actual and current position
+        estimation, this parameter informs you when to rerun the initial position estimation code with all the current
+        UWB and odometery data, in order to reset the initial estimation.
+        """
         p = [1.0001, 11.0, 14.0001, 20.9001, 1.0001, 0.0001, 0.0001, 3.9001, 4.9001, 1.0, 0, 0.0001, 0.0001, 0.0001,
              2.0001, 0.0001, 0.0001]
 
@@ -112,8 +126,17 @@ class Jackal(object):
         self.motion = JackalMotion(self.ns)
 
     def create_other_robot_odometry_recorder(self, robot_name):
+        """
+        This creates and setups up an odometry listener for a robot using the <robot_name>odometry/filtered topic
+        @param robot_name: The robot whose odometry needs to be listened to in the format i.e "robot/"
+        """
+
         def add_odometry(msg):
             # type: (Odometry) -> None
+            """
+            Function that handles odometry data
+            @param msg: The Odometry topic message
+            """
 
             t = get_time()
 
@@ -134,19 +157,25 @@ class Jackal(object):
             if self.other_odometry[robot_name]['data'] is None:
                 self.odometry_data[robot_name]['data'] = np.array((px, py, pz, v, theta, theta_yaw))
             else:
-                self.odometry_data[robot_name]['data'] = np.vstack((self.odometry_data[robot_name]['data'], (px, py, pz, v, theta, theta_yaw)))
+                self.odometry_data[robot_name]['data'] = np.vstack(
+                    (self.odometry_data[robot_name]['data'], (px, py, pz, v, theta, theta_yaw)))
             if self.odometry_data[robot_name]['time'] is None:
                 self.odometry_data[robot_name]['time'] = np.array([t], dtype=np.uint64)
             else:
                 self.odometry_data[robot_name]['time'] = np.append(self.odometry_data[robot_name]['time'], t)
-        
+
         self.odometry_data[robot_name]['data'] = None
         self.odometry_data[robot_name]['time'] = None
 
-        self.other_odometry[robot_name]['sub'] = rospy.Subscriber(robot_name + "odometry/filtered", Odometry, callback=add_odometry)
+        self.other_odometry[robot_name]['sub'] = rospy.Subscriber(robot_name + "odometry/filtered", Odometry,
+                                                                  callback=add_odometry)
 
     def add_anchors(self, msg):
         # type: (MarkerArray) -> None
+        """
+        Function that handles the MarkerArray of anchor positions and updates the anchor pose dict
+        @param msg: the MarkerArray topic message
+        """
 
         for marker in msg.markers:
             if marker.id not in self.anchor_to_robot:
@@ -155,6 +184,11 @@ class Jackal(object):
 
     def add_ranging(self, msg):
         # type: (Ranging) -> None
+        """
+        Function that handles UWB range data and makes sure that only the data of localized robots gets added to the
+        list of valid sensor data to use
+        @param msg: The Ranging topic message
+        """
         t = get_time()
 
         if self.tag_to_robot[msg.tagId] == self.ns:
@@ -190,6 +224,11 @@ class Jackal(object):
 
     def add_odometry(self, msg):
         # type: (Odometry) -> None
+        """
+        Function that handles odometry data and adds it to the data list, also using the estimated initial x,y,theta
+        translates the data
+        @param msg: The Odometry topic message
+        """
 
         t = get_time()
 
@@ -221,6 +260,12 @@ class Jackal(object):
             self.odom_times = np.append(self.odom_times, t)
 
     def get_current_robot_pose(self, robot_name):
+        """
+        Gets the estimated current position of a positioned robot using <robot_name>uwb/odom topic
+        @param robot_name: The robot's to extract the estimated position. If the robot does not exists then this will
+        wait for the message indefinitely
+        @return: The robots estimated x, y, z
+        """
         path_name = robot_name + Jackal.jackal_publish_path
 
         msg = rospy.wait_for_message(path_name, Odometry)
@@ -256,9 +301,19 @@ class Jackal(object):
         return rospy.has_param(parameter_name) and rospy.get_param(parameter_name)
 
     def stop(self):
+        """
+        Do not use
+        Sends a stop signal to the Jackal
+        """
         self.motion.v = 0
 
     def spread_message(self, robots):
+        """
+        Do not use as it not implemented
+        Sends a wave of messages asking the neighboring robots to send its localization information such as its
+        UWB and odometry data
+        @param robots: The robots to ask the data from
+        """
         for robot in robots:
             # rospy.Publisher()
             pass
@@ -277,12 +332,15 @@ class Jackal(object):
                 total_unique_poses = 0
 
                 if len(recoreded_data['localized']['data']) > 0:
-                    total_unique_poses = np.unique(np.array([np.round(d['pose'], 1) for d in  recoreded_data['localized']['data']]), axis=0).shape[0]
+                    total_unique_poses = \
+                        np.unique(np.array([np.round(d['pose'], 1) for d in recoreded_data['localized']['data']]),
+                                  axis=0).shape[0]
 
-                if total_knowns >= Jackal.num_known_anchor_tolerance or (total_unique_poses - total_knowns) * 2 >= Jackal.num_known_anchor_tolerance:
+                if total_knowns >= Jackal.num_known_anchor_tolerance or (
+                        total_unique_poses - total_knowns) * 2 >= Jackal.num_known_anchor_tolerance:
                     total_data_points = len(recoreded_data['localized']['data'])
 
-                    if total_data_points >  Jackal.num_datapoint_num_tolerance:
+                    if total_data_points > Jackal.num_datapoint_num_tolerance:
                         self.time_override = False
             elif self.auto_position_checker_dt > 0:
                 t = rospy.get_rostime().secs
@@ -299,11 +357,12 @@ class Jackal(object):
                     sub = np.array((self.x_initial, self.y_initial, 0, 0, self.theta_initial, 0))
 
                     print("Caculating")
-                    self.odometry_data -= sub                    
+                    self.odometry_data -= sub
                     result, cost = self.trilaterate_position(data, (self.x_initial, self.y_initial, self.theta_initial))
                     self.odometry_data += sub
 
-                    print("Current", np.array((self.x_initial, self.y_initial, self.theta_initial)), "Current Error", self.trilateration_error ,"Result", result, "Error", cost)
+                    print("Current", np.array((self.x_initial, self.y_initial, self.theta_initial)), "Current Error",
+                          self.trilateration_error, "Result", result, "Error", cost)
 
                     if cost < self.trilateration_error:
                         self.odometry_data -= np.array((self.x_initial, self.y_initial, 0, 0, self.theta_initial, 0))
@@ -338,13 +397,15 @@ class Jackal(object):
             total_unique_poses = 0
 
             if len(recoreded_data['localized']['data']) > 0:
-                total_unique_poses = np.unique(np.array([np.round(d['pose'], 1) for d in  recoreded_data['localized']['data']]), axis=0)
+                total_unique_poses = np.unique(
+                    np.array([np.round(d['pose'], 1) for d in recoreded_data['localized']['data']]), axis=0)
                 # print(total_unique_poses.shape[0])
                 total_unique_poses = total_unique_poses.shape[0]
 
                 # print(total_knowns, total_unique_poses)
 
-            if total_knowns >= Jackal.num_known_anchor_tolerance or (total_unique_poses - total_knowns) * 2 >= Jackal.num_known_anchor_tolerance:
+            if total_knowns >= Jackal.num_known_anchor_tolerance or (
+                    total_unique_poses - total_knowns) * 2 >= Jackal.num_known_anchor_tolerance:
                 total_data_points = len(recoreded_data['localized']['data'])
                 # print(total_data_points)
 
@@ -370,7 +431,7 @@ class Jackal(object):
                 # Since unable to localize in world reference frame continue to use odometery for only relative motion
                 pass
 
-        self.motion.step()
+        # self.motion.step()
         rospy.set_param(self.ns + Jackal.localized_param_key, self.is_localized)
 
     def setup_ukf(self, initial_x):
@@ -431,7 +492,7 @@ class Jackal(object):
             return idx - 1, idx
         return idx, idx + 1
 
-    def trilaterate_position(self, range_data, initial_pose=(0,0,0)):
+    def trilaterate_position(self, range_data, initial_pose=(0, 0, 0)):
         if len(self.odometry_data) > len(range_data):
             odometry = self.find_closest_odometry(range_data)
         else:
@@ -453,7 +514,7 @@ class Jackal(object):
         # json.dump( new_d, open("/home/marius/catkin_ws/src/uwb_localization/range_data.json", 'w'), )
         # print("range_data.json")
 
-        res = least_squares(self.trilateration_function, initial_pose, args=(range_data, odometry))        
+        res = least_squares(self.trilateration_function, initial_pose, args=(range_data, odometry))
 
         if res.cost > 50:
             local_mininum, error = self.check_for_local_mininum(res, range_data, odometry)
@@ -464,9 +525,22 @@ class Jackal(object):
         return np.array([local_mininum[0], local_mininum[1], 0, 0, local_mininum[2], 0]), error
 
     def rmse(self, residuals):
-        return np.sqrt(np.mean((residuals)**2))
+        """
+        Function that calcualtes the RMSE of residuals
+        @param residuals: The residuals to calcualte the RMSE from
+        @return: the final RMSE value
+        """
+        return np.sqrt(np.mean((residuals) ** 2))
 
     def check_for_local_mininum(self, current_min_sol, range_data, odometry):
+        """
+        In the case that the Non linear least sqaured runs into a local minimum, this function reruns the caclulation
+         but with a set of much different initial position estimates and only keeps the one with the lowest error
+        @param current_min_sol: The current solution to the non linear least sqaures problem
+        @param range_data: The UWB data
+        @param odometry: The odometry range data
+        @return: The new best estimate, the error of the state
+        """
         x, y, z = current_min_sol.x
 
         scores = [[current_min_sol.cost, current_min_sol.x, self.rmse(current_min_sol.fun)]]
@@ -482,6 +556,15 @@ class Jackal(object):
         return min_result[1], min_result[2]
 
     def trilateration_function(self, input_x, distances, odometry_data):
+        """
+        Calculates the residuals for the current input, distances and odometry inorder to calculates the Non Linear
+        Least Squares
+        @param input_x: The input of the function, initial x, y, and theta parameters
+        @param distances: The UWB range measurements
+        @param odometry_data: The associated odometry to the range measurements
+        @return: An array for the residuals calculated as the difference between the range measurements and the range
+         from the offset odometry data
+        """
         # x[0] = x_start
         # x[1] = y_start
         # x[2] = theta
@@ -518,6 +601,12 @@ class Jackal(object):
         return residuals
 
     def rotate(self, xy, rot_angle):
+        """
+        Rotates a 2D point by a certain angle
+        @param xy: The 2D point
+        @param rot_angle: the angle to rotate by
+        @return: The rotated 2D point
+        """
         c = np.cos(rot_angle)
         s = np.sin(rot_angle)
 
