@@ -3,7 +3,7 @@ import numpy as np
 
 from ukf.datapoint import DataType
 from ukf.state import UKFState
-from ukf.util import normalize
+from ukf.util import angle_diff
 
 
 class MeasurementPredictor(object):
@@ -39,12 +39,18 @@ class MeasurementPredictor(object):
             self.sensor_offset = data.extra['sensor_offset']
 
     def rotation_matrix(self, angle):
+        output = np.zeros((3, 3, angle.size))
+
         s = np.sin(angle)
         c = np.cos(angle)
 
-        return [[c, -s, 0],
-                [s, c, 0],
-                [0, 0, 1]]
+        output[0, 0, :] = c
+        output[1, 0, :] = s
+        output[0, 1, :] = -s
+        output[1, 1, :] = c
+        output[2, 2, :] = 1
+
+        return output
 
     def compute_sigma_z(self, sigma_x):
         sigma = np.zeros((self.nz, self.N_SIGMA))
@@ -53,16 +59,15 @@ class MeasurementPredictor(object):
             sigma[UKFState.X] = sigma_x[UKFState.X]  # px
             sigma[UKFState.Y] = sigma_x[UKFState.Y]  # py
         elif self.current_type == DataType.UWB:
-            sensor_pose = np.copy(sigma_x[:UKFState.Z + 1])
+            sensor_pose = sigma_x[:UKFState.Z + 1]
 
             if self.sensor_offset is not None:
-                angles = np.unique(sigma_x[UKFState.YAW])
+                angles = sigma_x[UKFState.YAW]
+                rot = self.rotation_matrix(angles)
 
-                for angle in angles:
-                    rot = self.rotation_matrix(angle)
-                    offset_rot = np.matmul(rot, self.sensor_offset).reshape((-1, 1))
+                offsets = np.einsum('ijn,j->in', rot, self.sensor_offset)
 
-                    sensor_pose[:, sigma_x[UKFState.YAW] == angle] += offset_rot
+                sensor_pose = sensor_pose + offsets
 
             distances = np.linalg.norm(sensor_pose - self.anchor_pos.reshape((-1, 1)), axis=0)
             sigma[0] = distances
@@ -73,6 +78,8 @@ class MeasurementPredictor(object):
             sigma[UKFState.V] = sigma_x[UKFState.V]  # v
             sigma[UKFState.YAW] = sigma_x[UKFState.YAW]  # theta
             sigma[UKFState.YAW_RATE] = sigma_x[UKFState.YAW_RATE]  # theta_yaw
+        elif self.current_type == DataType.IMU:
+            sigma[0] = sigma_x[UKFState.YAW]  # theta
 
         return sigma
 
@@ -83,7 +90,9 @@ class MeasurementPredictor(object):
         sub = np.subtract(sigma.T, z).T
 
         if self.current_type == DataType.ODOMETRY:
-            normalize(sub, UKFState.YAW)
+            sub[UKFState.YAW] = angle_diff(sigma[UKFState.YAW], z[UKFState.YAW])
+        elif self.current_type == DataType.IMU:
+            sub = angle_diff(sigma, z)
 
         return (np.matmul(self.WEIGHTS_C * sub, sub.T)) + self.R
 
