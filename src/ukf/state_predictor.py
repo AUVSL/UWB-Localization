@@ -2,7 +2,6 @@
 import numpy as np
 
 from ukf.state import UKFState
-from ukf.util import normalize
 
 
 class StatePredictor(object):
@@ -107,7 +106,7 @@ class StatePredictor(object):
     def predict_P(self, predicted_sigma, predicted_x):
         sub = np.subtract(predicted_sigma.T, predicted_x).T
 
-        normalize(sub, UKFState.YAW)
+        # normalize(sub, UKFState.YAW)
 
         return np.matmul(self.WEIGHTS_C * sub, sub.T)
 
