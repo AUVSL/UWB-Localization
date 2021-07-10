@@ -13,7 +13,18 @@ import sys
 
 
 class PositionPlotter(object):
+    """
+    A class to help plot the position of Odometry data
+    """
+
     def __init__(self, robot_name='jackal', position_links=None):
+        """
+        Setups the PositionPLotter class
+        @param robot_name: the name of the robot
+        @param position_links: the Subscriber topics to plot in the window. If it is None then the topics are searched
+        all topics ending with "uwb/odom" (UKF position estimate), "odometry/filtered" ( odometry positioning ),
+        "ground_truth/state" ( ground truth state )
+        """
         if position_links is None:
             position_links = []
 
@@ -43,8 +54,17 @@ class PositionPlotter(object):
                                                                self.create_position_subscriber_func(position_link))
 
     def create_position_subscriber_func(self, name):
+        """
+        Helper factory function to create an odometry and live plotter data adder
+        @param name:
+        @return:
+        """
         def add_pose(msg):
             # type: (Odometry) -> None
+            """
+            Extracts the position x,y values from the Odometry msg and adds it to the live plotter
+            @param msg:
+            """
 
             x = msg.pose.pose.position.x
             y = msg.pose.pose.position.y
@@ -54,9 +74,17 @@ class PositionPlotter(object):
         return add_pose
 
     def add_robot_pose(self, msg):
+        """
+        Deprecated
+        Added robot position
+        @param msg:
+        """
         self.live_plotter.add_data_point(self.robot_name, msg.x, msg.y)
 
     def run(self):
+        """
+        Run the plotter
+        """
         self.live_plotter.show()
 
 
