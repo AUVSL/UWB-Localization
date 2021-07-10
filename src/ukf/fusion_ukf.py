@@ -17,7 +17,6 @@ class FusionUKF(object):
         # Number of total states X, Y, Z, velocity, yaw, yaw rate
         self.NX = 6
 
-
         # Settings values -----------------------------------
         self.N_AUGMENTED = self.NX + 2
 
