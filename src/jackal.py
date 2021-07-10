@@ -273,6 +273,11 @@ class Jackal(object):
         return np.array([msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z])
 
     def explore_recorded_data(self):
+        """
+        Separates the ododmetry and range data as well as the associated robot into a dict of localized and unlocalized
+         nodes
+        @return: A dict of the localize and unlocalized data to use
+        """
         data = {
             "localized": {
                 "data": [],
@@ -296,6 +301,11 @@ class Jackal(object):
         return data
 
     def check_if_localized(self, robot_name):
+        """
+        Checks, using a robot's rosparam key, if the robot is localized or not
+        @param robot_name: The name of the robot to check if it has been localized or not
+        @return: If it has been localized returns True, false otherwise
+        """
         parameter_name = robot_name + Jackal.localized_param_key
 
         return rospy.has_param(parameter_name) and rospy.get_param(parameter_name)
@@ -319,6 +329,13 @@ class Jackal(object):
             pass
 
     def step(self):
+        """
+        This is the most important function as it handles the localization of the Jackal at each  timestep.
+        The process starts as the robot unlocalized and then once there is enough information for it to trilaterate it
+        will, thus transforming its odometry data from a local reference field to a global field. Once that is done it
+        toggles its tag and defines itself as being localized and uses an UKF to continue refining the measurement noise.
+        """
+        
         if self.is_localized or self.time_override:
             self.loc.step()
             self.start_time = None
@@ -435,11 +452,21 @@ class Jackal(object):
         rospy.set_param(self.ns + Jackal.localized_param_key, self.is_localized)
 
     def setup_ukf(self, initial_x):
+        """
+        Setups the initial UFK parameters such as the initial position, heading and covariance matrix
+        @param initial_x: The initial state variable
+        """
         self.loc.set_initial(self.x_initial, self.y_initial, self.theta_initial)
         self.loc.clear_data()
         self.loc.intialize(initial_x, np.identity(6))
 
     def find_closest_odometry(self, range_data):
+        """
+        Goes through each UWB range measurement and then associates it with the closest odometry data through
+        interpolation
+        @param range_data: The UWB range measurements
+        @return: The list of the interpolated odometry measurements
+        """
         closest = np.zeros((len(range_data), 4))
 
         for i, datapoint in enumerate(range_data):
@@ -457,7 +484,15 @@ class Jackal(object):
         return closest
 
     def odom_interpolation(self, start, end, t):
-
+        """
+        Interpolates between the odometry measurements at index start and end for time t, for the position, velcoity
+        and yaw rate estimates normal linear interpolation is used; however, for the yaw since it is bound by -180 and
+        180 angular interpolation is used
+        @param start: The start index of the odometry for the interpolation
+        @param end: The end index of the odometry for the interpolation
+        @param t: The current time that you want to interpolate to
+        @return: The interpolated odometry measurement
+        """
         odom_initial = self.odometry_data[start]
         odom_final = self.odometry_data[end]
 
@@ -481,6 +516,11 @@ class Jackal(object):
         return blend
 
     def find_closest_sorted(self, t):
+        """
+        Finds the closest odometry datapoint given the time t in order to help interpolate
+        @param t: The time to find the closest value
+        @return: The odom index before time t, the odom index after time t
+        """
         # print times.shape
 
         idx = np.searchsorted(self.odom_times, t, side='left')
@@ -493,6 +533,12 @@ class Jackal(object):
         return idx, idx + 1
 
     def trilaterate_position(self, range_data, initial_pose=(0, 0, 0)):
+        """
+        The function that handles the trilateration function for the initial position and heading
+        @param range_data: The UWB range data
+        @param initial_pose: The initial position estimate to use for the Non linnear least sqaures
+        @return: The estimated initial position estimate of the robot
+        """
         if len(self.odometry_data) > len(range_data):
             odometry = self.find_closest_odometry(range_data)
         else:
