@@ -13,3 +13,6 @@ class DataPoint(object):
         self.data_type = data_type
         self.measurement_data = measurement_data
         self.timestamp = timestamp
+
+    def __repr__(self):
+        return str(self.data_type) + ":" + str(self.timestamp) + ": " + str(self.measurement_data)
