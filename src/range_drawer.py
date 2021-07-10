@@ -13,7 +13,15 @@ import sys
 
 
 class RangePlotter(object):
+    """
+    A class to help plot the UWB range data
+    """
     def __init__(self, tags=None, n=-1):
+        """
+        Setups the RangePLotter class
+        @param tags: The tags to plot in the range plotter. If it is None, plot everything
+        @param n: The n latest range measurements
+        """
         toa_ranging = '/gtec/toa/ranging'
 
         # self.live_plotter = LivePlotter(window_name="Range Drawer", lengend_loc="upper left", font_size='xx-small')
@@ -30,6 +38,10 @@ class RangePlotter(object):
 
     def add_ranging(self, msg):
         # type: (Ranging) -> None
+        """
+        Adds the range data if it part of the accepted tag ids to the live plotter
+        @param msg: the Ranging msg
+        """
 
         anchor_id = msg.anchorId
         tag_id = msg.tagId
@@ -42,6 +54,9 @@ class RangePlotter(object):
             self.live_plotter.add_data_point(label, time, msg.range)
 
     def run(self):
+        """
+        Running the live plotter
+        """
         self.live_plotter.show()
 
 
