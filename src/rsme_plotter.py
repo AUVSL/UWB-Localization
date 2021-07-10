@@ -13,7 +13,16 @@ from ukf_uwb_localization import get_time
 
 
 class RSMEPlotter(object):
+    """
+    Do not use as it is not finished.
+    Class is meant to plot the RSME of the robot estimate position in live
+    """
     def __init__(self, target, actual):
+        """
+        Setups the RMSE live plotter
+        @param target: the target Odometry topic
+        @param actual: the actual Odometry topic
+        """
         self.live_plotter = LivePlotter(alpha=0.5, window_name="RMSE Drawer")
         # self.live_plotter.ax.set_aspect("equal")
 
@@ -26,6 +35,11 @@ class RSMEPlotter(object):
         self.target_position_sub = rospy.Subscriber(target, Odometry, self.add_target)
 
     def get_odometry(self, msg):
+        """
+        Process Odometery topic data
+        @param msg: the Odometry topic message
+        @return: A list with the x, y, z, v, theta, theta yaw
+        """
         px = msg.pose.pose.position.x
         py = msg.pose.pose.position.y
         pz = msg.pose.pose.position.z
@@ -43,6 +57,10 @@ class RSMEPlotter(object):
         return [px, py, pz, v, theta, theta_yaw]
 
     def add_actual(self, msg):
+        """
+        Add the expected position data
+        @param msg: the Odometry topic data
+        """
         t = get_time()
 
         data = self.get_odometry(msg)
@@ -53,6 +71,10 @@ class RSMEPlotter(object):
         self.subscribers['actual'].append(o)
 
     def add_target(self, msg):
+        """
+        Add the ground truth odometry data
+        @param msg: the Odometry topic data
+        """
         t = get_time()
 
         data = self.get_odometry(msg)
@@ -63,6 +85,9 @@ class RSMEPlotter(object):
         self.subscribers['target'].append(o)
 
     def run(self):
+        """
+        Started live plotter
+        """
         self.live_plotter.show()
 
 
