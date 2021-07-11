@@ -20,6 +20,7 @@ class StateUpdater(object):
         dx = np.subtract(sigma_x.T, predicted_x).T
 
         # normalize(dx, UKFState.YAW)
+        dx[UKFState.YAW] = angle_diff(sigma_x[UKFState.YAW], predicted_x[UKFState.YAW])
 
         dz = np.subtract(sigma_z.T, predicted_z)
 
