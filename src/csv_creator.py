@@ -1,15 +1,13 @@
 #! /usr/bin/env python
 # coding=utf-8
 
-import csv
-
 import rospy
 from gtec_msgs.msg import Ranging
 from nav_msgs.msg import Odometry
-from tf.transformations import euler_from_quaternion, euler_from_quaternion
+from tf.transformations import euler_from_quaternion
 from visualization_msgs.msg import MarkerArray
 
-from ukf.datapoint import DataType, DataPoint
+from ukf.datapoint import DataType
 
 
 class Recorder(object):

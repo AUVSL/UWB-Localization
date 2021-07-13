@@ -59,6 +59,7 @@ class PositionPlotter(object):
         @param name: Name of the topic name
         @return: return the custom pose addition software
         """
+
         def add_pose(msg):
             # type: (Odometry) -> None
             """

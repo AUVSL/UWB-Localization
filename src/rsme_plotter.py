@@ -17,6 +17,7 @@ class RSMEPlotter(object):
     Do not use as it is not finished.
     Class is meant to plot the RSME of the robot estimate position in live
     """
+
     def __init__(self, target, actual):
         """
         Setups the RMSE live plotter

@@ -14,6 +14,7 @@ class DataPoint(object):
     """
     A class meant to represent a data point to pass into the position estimation system
     """
+
     def __init__(self, data_type, measurement_data, timestamp, extra=None):
         """
         Setups the DataPoint object

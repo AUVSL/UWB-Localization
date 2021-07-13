@@ -335,7 +335,7 @@ class Jackal(object):
         will, thus transforming its odometry data from a local reference field to a global field. Once that is done it
         toggles its tag and defines itself as being localized and uses an UKF to continue refining the measurement noise.
         """
-        
+
         if self.is_localized or self.time_override:
             self.loc.step()
             self.start_time = None

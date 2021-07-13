@@ -6,7 +6,6 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 
 import rospy
-import matplotlib.pyplot as plt
 from gtec_msgs.msg import Ranging
 from live_plotter import LivePlotter
 import sys
@@ -16,6 +15,7 @@ class RangePlotter(object):
     """
     A class to help plot the UWB range data
     """
+
     def __init__(self, tags=None, n=-1):
         """
         Setups the RangePLotter class

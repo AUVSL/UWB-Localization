@@ -10,7 +10,8 @@ class LivePlotter(object):
     A helper class for creating live plotting matplotlib windows
     """
 
-    def __init__(self, update_interval=1000, alpha=1.0, window_name=None, time_removal=None, lengend_loc='best', font_size=None):
+    def __init__(self, update_interval=1000, alpha=1.0, window_name=None, time_removal=None, lengend_loc='best',
+                 font_size=None):
         """
         Setups the live plotting window
         @param update_interval: How fast the animated window updates its values

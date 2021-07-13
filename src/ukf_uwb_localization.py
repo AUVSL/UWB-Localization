@@ -175,7 +175,7 @@ class UKFUWBLocalization(object):
         parameter_name = robot_name + "is_localized"
 
         if rospy.has_param(parameter_name):
-            return  rospy.get_param(parameter_name)
+            return rospy.get_param(parameter_name)
         else:
             return True
 

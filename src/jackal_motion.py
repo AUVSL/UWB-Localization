@@ -9,6 +9,7 @@ class JackalMotion(object):
     """
     Class meant to publish to the Jackal motion commands
     """
+
     def __init__(self, namespace):
         """
         Setups publisher helper. Publishes to <namespace>jackal_velocity_controller/cmd_vel
