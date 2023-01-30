@@ -41,6 +41,10 @@ This project uses [`ROS Melodic`](http://wiki.ros.org/melodic) as its ROS backen
 To setup:
 
 1. Either create a catkin workspace or navigate to its `src` folder
+    - source /opt/ros/melodic/setup.bash
+    - mkdir -p ~/catkin_ws/src
+    - cd ~/catkin_ws/
+    - catkin_make
 2. `git clone https://github.com/Marius-Juston/UWB-Localization.git`
 3. This project is also associated with [UWB-Jackal-World](https://github.com/AUVSL/UWB-Jackal-World)
    - Follow this page if you want to install the Gazebo environement for this project, though it is not necessary.
