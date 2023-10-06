@@ -76,13 +76,14 @@ def jacobian(input_x, odometry):
     return np.hstack([xyz_jac, theta_jac[:, None]]) * 2
 
 
-def LSQ(initial_state, odometry):
+def LSQ(initial_state, odometry, random_scale=1.):
     odometry_copy = odometry
 
     # np.random.normal(np.zeros(4), [5, 5, 0, np.pi / 2])
 
     random_odometry = np.random.normal(np.zeros(odometry.shape[1]),
-                                       [20 / 1000, 5 / 1000, 5 / 1000, 0, 5 / 1000, 5 / 1000, 0, np.pi / 1000],
+                                       np.array([20 / 1000, 5 / 1000, 5 / 1000, 0, 5 / 1000, 5 / 1000, 0,
+                                                 np.pi / 1000]) * random_scale,
                                        odometry.shape)
 
     odometry_copy += random_odometry
@@ -244,7 +245,7 @@ def plot_result(result, odometry):
     plt.plot(global_xyz_tag[:, 0], global_xyz_tag[:, 1], c='g')
 
 
-def generate_output(N_ROBOTS=1, T=10, plot=False):
+def generate_output(N_ROBOTS=1, T=10, plot=False, random_scale=1.):
     BOUNDS = 20
 
     target_robot = gen_random_robot(BOUNDS, target=True)
@@ -290,7 +291,7 @@ def generate_output(N_ROBOTS=1, T=10, plot=False):
     odometry_data = np.array(odometry_data)
     target_robot_data = np.array(target_robot_data)
 
-    output = LSQ(initial_state, odometry_data)
+    output = LSQ(initial_state, odometry_data, random_scale)
 
     if plot:
         for i in range(data.shape[0]):
@@ -315,38 +316,46 @@ def generate_output(N_ROBOTS=1, T=10, plot=False):
     return initial_state, output
 
 
-def generate_monte_carlo():
+def generate_monte_carlo(noise_levels=False):
     MAX_N_ROBOTS = 5
     MAX_T = 10
     GENERATIONS = 1000
 
     monte_carlo_data = dict()
 
+    if noise_levels:
+        Tmax = [MAX_T]
+        scaleMax = [0.001, 0.1, 1, 10, 100]
+    else:
+        Tmax = range(1, MAX_T + 1)
+        scaleMax = [1]
+
     for N_ROBOTS in range(1, MAX_N_ROBOTS + 1):
         for_n_robot = []
 
-        for T in range(1, MAX_T + 1):
-            print(N_ROBOTS, T)
+        for T in Tmax:
+            for scale in scaleMax:
+                print(N_ROBOTS, T, scale)
 
-            data = []
+                data = []
 
-            for _ in range(GENERATIONS):
-                target, actual = generate_output(N_ROBOTS, T)
+                for _ in range(GENERATIONS):
+                    target, actual = generate_output(N_ROBOTS, T, random_scale=scale)
 
-                data.append([*actual, *target])
+                    data.append([*actual, *target])
 
-            data = np.array(data)
+                data = np.array(data)
 
-            pose_diff = data[:, 0:3] - data[:, 4: 7]
-            theta_diff = angle_diff(data[:, 3], data[:, 7])
+                pose_diff = data[:, 0:3] - data[:, 4: 7]
+                theta_diff = angle_diff(data[:, 3], data[:, 7])
 
-            differences = np.concatenate([pose_diff[:, :2], theta_diff[:, np.newaxis]], axis=1)
+                differences = np.concatenate([pose_diff[:, :2], theta_diff[:, np.newaxis]], axis=1)
 
-            for_n_robot.append(differences.tolist())
+                for_n_robot.append(differences.tolist())
 
         monte_carlo_data[N_ROBOTS] = for_n_robot
 
-    with open('save_data.json', 'w') as f:
+    with open(f'save_data{"_noise" if noise_levels else ""}.json', 'w') as f:
         json.dump(monte_carlo_data, f)
 
 
@@ -365,8 +374,8 @@ def plot_monete_carlo():
         plt.show()
 
 
-def plot_violins():
-    with open('save_data.json', 'r') as f:
+def plot_violins(noise_levels=False):
+    with open(f'save_data{"_noise" if noise_levels else ""}.json', 'r') as f:
         data = json.load(f)
 
     poses_fig: Figure = plt.figure()
@@ -415,6 +424,9 @@ def plot_violins():
 
         x = np.array(range(len(means))) + 1
 
+        if noise_levels:
+            x = np.array([0.01, 0.1, 1, 10, 100])
+
         min_t = min(x)
         max_t = max(x)
 
@@ -426,20 +438,31 @@ def plot_violins():
         angles_ax.fill_between(x, angle_min_quantile, angle_max_quantile, alpha=0.3)
 
     poses_ax.set_ylabel('Median Position Error (m)')
-    poses_ax.set_xlabel('Time Horizon (s)')
+    if noise_levels:
+        poses_ax.set_xlabel('Noise Magnitude Scale')
+    else:
+        poses_ax.set_xlabel('Time Horizon (s)')
     poses_ax.legend()
     poses_ax.set_xlim([min_t, max_t])
     poses_ax.set_yscale('log')
+
+    if noise_levels:
+        poses_ax.set_xscale('log')
     poses_fig.tight_layout()
-    poses_fig.savefig('monte_carlo_poses.png')
+    poses_fig.savefig(f'monte_carlo_poses{"_noise" if noise_levels else ""}.png')
 
     angles_ax.set_ylabel('Absolute Median Angle Error (rad)')
-    angles_ax.set_xlabel('Time Horizon (s)')
+    if noise_levels:
+        angles_ax.set_xlabel('Noise Magnitude Scale')
+    else:
+        angles_ax.set_xlabel('Time Horizon (s)')
     angles_ax.set_xlim([min_t, max_t])
     angles_ax.legend()
     angles_ax.set_yscale('log')
+    if noise_levels:
+        angles_ax.set_xscale('log')
     angles_fig.tight_layout()
-    angles_fig.savefig('monte_carlo_angles.png')
+    angles_fig.savefig(f'monte_carlo_angles{"_noise" if noise_levels else ""}.png')
 
     plt.show()
 
@@ -450,8 +473,10 @@ if __name__ == '__main__':
     # for i in range(5):
     # generate_output(10, 10, True)
 
-    # generate_monte_carlo()
+    generate_monte_carlo()
 
     # plot_monete_carlo()
 
     plot_violins()
+
+    # generate_output(10, 10, True, random_scale=1)
