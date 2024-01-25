@@ -5,6 +5,7 @@ import threading
 import rospy
 from geometry_msgs.msg import Twist
 from rospy import Rate
+import time
 
 
 class Robot:
@@ -86,9 +87,9 @@ class TaskTimer(threading.Thread):
 
     def run(self):
         r = Rate(self.rate, reset=self._reset)
-        print self.rate
 
         counter = 0
+        # s_time = time.time()
 
         while not rospy.core.is_shutdown() and not self._shutdown:
             if self._shutdown:
@@ -106,6 +107,8 @@ class TaskTimer(threading.Thread):
                 if rospy.core.is_shutdown():
                     break
                 raise
+
+        # print self._period, time.time() - s_time
 
 
 class SystemTasks:
@@ -128,7 +131,7 @@ class SystemTasks:
             self.add_task(0, robot_group, robot_id=robot_id)
 
     def run(self):
-        rate = Rate(1)
+        rate = Rate(10)
 
         while not rospy.is_shutdown() and len(self.tasks) > 0:
             for key, robot_tasks in self.tasks.items():
