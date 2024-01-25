@@ -42,6 +42,9 @@ class RobotGroup:
         for drone in self.drones:
             drone.set(x, y, z, ax, ay, az)
 
+    def __getitem__(self, item):
+        return self.drones[item]
+
 
 class TaskTimer(threading.Thread):
     """
@@ -113,9 +116,15 @@ class SystemTasks:
         for key in robot_groups.keys():
             self.tasks[key] = []
 
-    def add_task(self, seconds, robot_group, **vel_command):
-        self.tasks[robot_group].append(
-            TaskTimer(seconds, lambda: self.robot_groups[robot_group].set(**vel_command)))
+    def add_task(self, seconds, robot_group, robot_id=None, **vel_command):
+        if robot_id is None:
+            command = lambda: self.robot_groups[robot_group].set(**vel_command)
+
+
+        else:
+            command = lambda: self.robot_groups[robot_group].set(**vel_command)
+
+        self.tasks[robot_group].append(TaskTimer(seconds, command))
 
     def run(self):
         rate = Rate(1)
@@ -147,6 +156,11 @@ if __name__ == "__main__":
     })
 
     system_tasks.add_task(1, Drone, z=1)
+
+    system_tasks.add_task(1, Drone, robot_id=0, z=1)
+    system_tasks.add_task(2, Drone, robot_id=0, z=1)
+    system_tasks.add_task(3, Drone, robot_id=0, z=1)
+
     system_tasks.add_task(0, Drone, z=0)
     system_tasks.add_task(5, Jackal, x=2)
 
