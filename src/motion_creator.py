@@ -138,14 +138,45 @@ class SystemTasks:
                 current_task = robot_tasks[0]
 
                 if current_task.started and not current_task.is_alive():
+                    print "Task terminated"
                     robot_tasks.pop(0)
 
                     if len(robot_tasks) == 0:
                         del self.tasks[key]
                 elif not current_task.started:
+                    print "Starting new task"
                     current_task.start()
 
             rate.sleep()
+
+
+def uwb_localization_test(system_tasks):
+    system_tasks.add_task(0, Drone)
+    system_tasks.add_task(0, Jackal)
+    #
+    system_tasks.add_task(2, Drone, z=1)
+    system_tasks.add_task(5, Drone, z=0)
+    #
+    system_tasks.add_task(7, Jackal, x=0)
+    #
+    system_tasks.add_task(7, Drone, x=1)
+
+    system_tasks.add_task(2, Jackal, robot_id=0, x=1, az=0.5)
+    system_tasks.add_task(1, Jackal, robot_id=1, x=1, az=-0.75)
+    system_tasks.add_task(0, Jackal)
+
+    system_tasks.add_task(6, Jackal, x=1.5)
+    system_tasks.add_task(5, Jackal, x=.5, az=0.5)
+
+    system_tasks.add_task(7, Drone, x=2, az=-0.5)
+
+    system_tasks.add_task(6, Drone, x=1.5, az=-0.1)
+
+    system_tasks.add_task(4, Jackal, x=2, az=-0.1)
+    system_tasks.add_task(2, Jackal, x=2, az=1)
+
+    system_tasks.add_task(0, Drone)
+    system_tasks.add_task(0, Jackal)
 
 
 if __name__ == "__main__":
@@ -159,15 +190,17 @@ if __name__ == "__main__":
         Jackal: jackals
     })
 
-    system_tasks.add_task(0, Drone, z=0)
+    uwb_localization_test(system_tasks)
 
-    # system_tasks.add_task(1, Drone, z=1)
-
-    system_tasks.add_task(1, Drone, robot_id=0, z=1, stop=True)
-    system_tasks.add_task(2, Drone, robot_id=1, z=1, stop=True)
-    # system_tasks.add_task(3, Drone, robot_id=2, z=1)
-
-    system_tasks.add_task(0, Drone, z=0)
-    system_tasks.add_task(5, Jackal, x=2)
+    # system_tasks.add_task(0, Drone, z=0)
+    #
+    # # system_tasks.add_task(1, Drone, z=1)
+    #
+    # system_tasks.add_task(1, Drone, robot_id=0, z=1, stop=True)
+    # system_tasks.add_task(2, Drone, robot_id=1, z=1, stop=True)
+    # # system_tasks.add_task(3, Drone, robot_id=2, z=1)
+    #
+    # system_tasks.add_task(0, Drone, z=0)
+    # system_tasks.add_task(5, Jackal, x=2)
 
     system_tasks.run()
