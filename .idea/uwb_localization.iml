@@ -6,7 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/build" />
       <excludeFolder url="file://$MODULE_DIR$/.vscode" />
     </content>
-    <orderEntry type="jdk" jdkName="Remote Python 2.7.17 WSL: /usr/bin/python" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 2.7.17 WSL (Ubuntu-18.04): (/usr/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
