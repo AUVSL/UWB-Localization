@@ -30,21 +30,24 @@ class Recorder(object):
         toa_ranging = '/gtec/toa/ranging'
 
         self.anchors_sub = rospy.Subscriber(anchors, MarkerArray, callback=self.add_anchors)
-        ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
+        self.ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
 
         id = 2
 
         odometry = '/Jackal{}/odometry/filtered'.format(id)
-        odometry = rospy.Subscriber(odometry, Odometry, callback=self.create_odometry_callback(DataType.ODOMETRY))
+        self.odometry_filtered = rospy.Subscriber(odometry, Odometry,
+                                                  callback=self.create_odometry_callback(DataType.ODOMETRY))
 
         odometry = '/Jackal{}/uwb/odom'.format(id)
-        odometry = rospy.Subscriber(odometry, Odometry, callback=self.create_odometry_callback(DataType.ODOMETRY))
+        self.odometry_uwb = rospy.Subscriber(odometry, Odometry,
+                                             callback=self.create_odometry_callback(DataType.ODOMETRY))
 
         odometry = '/Jackal{}/ground_truth/state'.format(id)
-        odometry = rospy.Subscriber(odometry, Odometry, callback=self.create_odometry_callback(DataType.GROUND_TRUTH))
+        self.odometry_gt = rospy.Subscriber(odometry, Odometry,
+                                            callback=self.create_odometry_callback(DataType.GROUND_TRUTH))
 
         imu = '/Jackal{}/imu/data'.format(id)
-        imu = rospy.Subscriber(imu, Imu, callback=self.add_imu)
+        self.imu = rospy.Subscriber(imu, Imu, callback=self.add_imu)
 
         print("Ready")
 
