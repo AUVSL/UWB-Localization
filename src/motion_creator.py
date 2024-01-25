@@ -116,15 +116,16 @@ class SystemTasks:
         for key in robot_groups.keys():
             self.tasks[key] = []
 
-    def add_task(self, seconds, robot_group, robot_id=None, **vel_command):
+    def add_task(self, seconds, robot_group, robot_id=None, stop=False, **vel_command):
         if robot_id is None:
             command = lambda: self.robot_groups[robot_group].set(**vel_command)
-
-
         else:
-            command = lambda: self.robot_groups[robot_group].set(**vel_command)
+            command = lambda: self.robot_groups[robot_group][robot_id].set(**vel_command)
 
         self.tasks[robot_group].append(TaskTimer(seconds, command))
+
+        if stop:
+            self.add_task(0, robot_group, robot_id=robot_id)
 
     def run(self):
         rate = Rate(1)
@@ -155,11 +156,13 @@ if __name__ == "__main__":
         Jackal: jackals
     })
 
-    system_tasks.add_task(1, Drone, z=1)
+    system_tasks.add_task(0, Drone, z=0)
 
-    system_tasks.add_task(1, Drone, robot_id=0, z=1)
-    system_tasks.add_task(2, Drone, robot_id=0, z=1)
-    system_tasks.add_task(3, Drone, robot_id=0, z=1)
+    # system_tasks.add_task(1, Drone, z=1)
+
+    system_tasks.add_task(1, Drone, robot_id=0, z=1, stop=True)
+    system_tasks.add_task(2, Drone, robot_id=1, z=1, stop=True)
+    # system_tasks.add_task(3, Drone, robot_id=2, z=1)
 
     system_tasks.add_task(0, Drone, z=0)
     system_tasks.add_task(5, Jackal, x=2)
