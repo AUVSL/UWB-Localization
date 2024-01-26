@@ -11,7 +11,7 @@ from ukf.datapoint import DataType
 
 
 class Recorder(object):
-    def __init__(self, out="out.csv"):
+    def __init__(self, out="out3.csv"):
         self.data = []
         self.out = out
 

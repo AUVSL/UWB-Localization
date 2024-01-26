@@ -9,6 +9,7 @@ import numpy as np
 import rospkg
 import rospy
 import tf
+from geometry_msgs.msg import Point
 from gtec_msgs.msg import Ranging
 from nav_msgs.msg import Odometry
 from scipy.optimize import least_squares
@@ -43,7 +44,7 @@ def get_anchors(tags_file="tag_ids.json"):
 
 class UKFUWBLocalization(object):
     def __init__(self, uwb_std=1, odometry_std=(1, 1, 1, 1, 1, 1), accel_std=1, yaw_accel_std=1, alpha=1, beta=0,
-                 namespace=None, right_tag=0, left_tag=1, x_initial=0, y_initial=0, theta_initial=0):
+                 namespace=None, right_tag=0, left_tag=1, x_initial=0, y_initial=0, theta_initial=0, k=None):
         if namespace is None:
             namespace = '/'
 
@@ -63,7 +64,7 @@ class UKFUWBLocalization(object):
         self.left_tag = left_tag
         self.anchor_to_robot = get_anchors()
 
-        self.ukf = FusionUKF(sensor_std, accel_std, yaw_accel_std, alpha, beta)
+        self.ukf = FusionUKF(sensor_std, accel_std, yaw_accel_std, alpha, beta, k=k)
 
         self.anchor_poses = dict()
         self.tag_offset = self.retrieve_tag_offsets(
@@ -81,6 +82,8 @@ class UKFUWBLocalization(object):
         anchors = '/gtec/toa/anchors'
         toa_ranging = '/gtec/toa/ranging'
 
+        transformed_odom = namespace + 'odometry/transformed'
+
         if namespace is None:
             publish_odom = '/jackal/uwb/odom'
             odometry = '/odometry/filtered'
@@ -88,11 +91,12 @@ class UKFUWBLocalization(object):
             publish_odom = namespace + 'uwb/odom'
             odometry = namespace + 'odometry/filtered'
 
-        anchors_sub = rospy.Subscriber(anchors, MarkerArray, callback=self.add_anchors)
-        ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
-        odometry = rospy.Subscriber(odometry, Odometry, callback=self.add_odometry)
+        self.anchors_sub = rospy.Subscriber(anchors, MarkerArray, callback=self.add_anchors)
+        self.ranging_sub = rospy.Subscriber(toa_ranging, Ranging, callback=self.add_ranging)
+        self.odometry = rospy.Subscriber(odometry, Odometry, callback=self.add_odometry)
 
         self.estimated_pose = rospy.Publisher(publish_odom, Odometry, queue_size=1)
+        self.transformed_odom = rospy.Publisher(transformed_odom, Odometry, queue_size=1)
         self.odom = Odometry()
 
         self.sensor_data = []
@@ -156,13 +160,39 @@ class UKFUWBLocalization(object):
 
         theta_yaw = msg.twist.twist.angular.z
 
-        theta_yaw += self.start_rotation
+        theta_yaw = theta_yaw
         px += self.start_translation[0]
         py += self.start_translation[1]
 
+        theta = (theta + self.start_rotation) % (np.pi * 2)
+
+        # print(px, py, self.start_translation, self.start_rotation)
+
+        # px = np.cos(self.start_rotation) * px - np.sin(self.start_rotation) * py + self.start_translation[0]
+        # py = np.cos(self.start_rotation) * px + np.sin(self.start_rotation) * py + self.start_translation[1]
+
         data = DataPoint(DataType.ODOMETRY, np.array([px, py, pz, v, theta, theta_yaw]), t)
 
+        # self.ukf.update(data)
+
         self.sensor_data.append(data)
+
+        tranformed_pose = Odometry()
+
+        tranformed_pose.header = msg.header
+        tranformed_pose.pose.pose.position.x = px
+        tranformed_pose.pose.pose.position.y = py
+        tranformed_pose.pose.pose.position.z = pz
+        tranformed_pose.twist.twist.linear.x = v
+        tranformed_pose.twist.twist.angular.z = theta_yaw
+        angles = quaternion_from_euler(0, 0, theta)
+
+        tranformed_pose.pose.pose.orientation.x = angles[0]
+        tranformed_pose.pose.pose.orientation.y = angles[1]
+        tranformed_pose.pose.pose.orientation.z = angles[2]
+        tranformed_pose.pose.pose.orientation.w = angles[3]
+
+        self.transformed_odom.publish(tranformed_pose)
 
     def add_anchors(self, msg):
         # type: (MarkerArray) -> None
@@ -195,11 +225,15 @@ class UKFUWBLocalization(object):
                 anchor_pose = self.anchor_poses[msg.anchorId]
                 anchor_distance = msg.range / 1000.
 
+                # print("ADDED UWB")
+
                 data = DataPoint(DataType.UWB, anchor_distance, t, extra={
                     "anchor": anchor_pose,
                     'sensor_offset': self.tag_offset[msg.tagId]
                     # 'sensor_offset': None
                 })
+
+                # self.ukf.update(data)
 
                 self.sensor_data.append(data)
 
@@ -210,7 +244,9 @@ class UKFUWBLocalization(object):
         self.initialized = True
 
     def process_ukf_data(self):
-        for data in self.sensor_data:
+        sorted_data = sorted(self.sensor_data, key=lambda x: x.timestamp)
+
+        for data in sorted_data:
             self.ukf.update(data)
 
         self.clear_data()
@@ -220,7 +256,7 @@ class UKFUWBLocalization(object):
         self.odom.pose.pose.position.x = x
         self.odom.pose.pose.position.y = y
         self.odom.pose.pose.position.z = z
-        self.odom.twist.twist.linear.x = v
+        self.odom.twist.twist.linear.x = -v
         self.odom.twist.twist.angular.z = yaw_rate
 
         angles = quaternion_from_euler(0, 0, yaw)
@@ -236,6 +272,7 @@ class UKFUWBLocalization(object):
         del self.sensor_data[:]
 
     def set_initial(self, x_initial, y_initial, theta_initial):
+        print("Setting initial", x_initial, y_initial, theta_initial)
         self.start_translation = np.array([x_initial, y_initial])
         self.start_rotation = theta_initial
 
@@ -251,7 +288,7 @@ class UKFUWBLocalization(object):
         if not self.initialized:
             self.initialize_pose(initial_P)
 
-        rate = rospy.Rate(60)
+        rate = rospy.Rate(100)
 
         while not rospy.is_shutdown():
             self.process_ukf_data()
@@ -297,8 +334,12 @@ class UKFUWBLocalization(object):
                     'dist': s.measurement_data
                 })
 
-        if len(uwb) > 3:
-            res = least_squares(self.func, [0, 0, 0, 0], args=(d, uwb))
+        print("UWB PROCESS LENGTH", len(uwb))
+        if len(uwb) >= 3:
+            # res = least_squares(self.func, [0, 0, 0, 0], args=(d, uwb))
+            res = least_squares(self.func, [0, 0, 0, 0], args=(d, uwb), loss='soft_l1',
+                                f_scale=10.0,
+                                jac='3-point', )
 
             # print(res)
 
@@ -313,8 +354,10 @@ class UKFUWBLocalization(object):
 
             del self.sensor_data[:]
 
-            self.start_translation = center
-            self.start_rotation = theta
+            self.set_initial(center[0], center[1], theta)
+
+            # self.start_translation = center
+            # self.start_rotation = theta
 
             if initial_P is None:
                 initial_P = np.identity(6)
@@ -371,6 +414,28 @@ def get_tag_ids(ns, tags_file='tag_ids.json'):
     return right_tag, left_tag, anchor
 
 
+def to_p(ns):
+    x = [6.0, 2.533101067702734, 2.415959286874128, 0.2661715221275878, 0.5665457615654477, -5.550914177849361,
+         0.6256636346811915, 3.3333308521420166, 3.3179852572472988, 0.0001, 0.4345337428241794, 0.7550338410102531,
+         0.01, 0.01, 0.036182385874357806, 0.08532954911231647, 4.172498592187061, 5.0, 2.7881495217747605]
+
+    uwb_std = x[0]
+    speed_noise_std = x[1]
+    yaw_rate_noise_std = x[2]
+    alpha = x[3]
+    beta = x[4]
+    k = x[5]
+    P = np.diag([x[6], x[7], x[8], x[9], x[10], x[11]])
+    odometry_std = x[12:18]
+
+    ukf = UKFUWBLocalization(uwb_std, odometry_std, accel_std=speed_noise_std, yaw_accel_std=yaw_rate_noise_std,
+                             alpha=alpha,
+                             beta=beta, namespace=ns,
+                             right_tag=right_tag, left_tag=left_tag, k=k)
+
+    return ukf, P
+
+
 if __name__ == "__main__":
     rospy.init_node("ukf_uwb_localization_kalman")
 
@@ -390,15 +455,24 @@ if __name__ == "__main__":
         intial_pose.pose.pose.orientation.w
     ))[2]
 
-    print("Actual Initial", x, y, v, theta)
+    print("Actual Initial", x, y, v, theta, np.degrees(theta))
+    #
+    # p = [1.0001, 11.0, 14.0001, 20.9001, 1.0001, 1, 1, 3.9001 * 10, 4.9001 * 10, 1.0, 0, 0.0001, 0.0001, 0.0001, 2.0001,
+    #      0.0001, 0.0001]
+    #
+    # p = np.array(p)
+    # # p[0:7] *= 0.1
+    #
+    # # p = [1.0001, 1000, 1000, 1, 1.0001, 0.0001, 0.0001, 3.9001, 4.9001, 1.0, 0, 0.0001, 0.0001, 0.0001, 2.0001,
+    # #      0.0001, 0.0001]
+    #
+    # loc = UKFUWBLocalization(p[0], p[1:7], accel_std=p[7], yaw_accel_std=p[8], alpha=p[9], beta=p[10], namespace=ns,
+    #                          right_tag=right_tag, left_tag=left_tag)
 
-    p = [1.0001, 11.0, 14.0001, 20.9001, 1.0001, 0.0001, 0.0001, 3.9001, 4.9001, 1.0, 0, 0.0001, 0.0001, 0.0001, 2.0001,
-         0.0001, 0.0001]
-
-    loc = UKFUWBLocalization(p[0], p[1:7], accel_std=p[7], yaw_accel_std=p[8], alpha=p[9], beta=p[10], namespace=ns,
-                             right_tag=right_tag, left_tag=left_tag)
-    # loc.intialize(np.array([x, y, z, v, theta ]),
-    # np.identity(6))
+    loc, P = to_p(ns)
+    loc.set_initial(x, y, theta)
+    loc.intialize(np.array([x, y, z, v, theta]),
+                  P)
 
     loc.run()
 

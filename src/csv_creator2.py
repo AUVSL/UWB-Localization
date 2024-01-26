@@ -2,6 +2,7 @@
 # coding=utf-8
 
 import rospy
+from geometry_msgs.msg import Point
 from gtec_msgs.msg import Ranging
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
@@ -12,7 +13,7 @@ from ukf.datapoint import DataType
 
 
 class Recorder(object):
-    def __init__(self, out="out.csv"):
+    def __init__(self, out="/home/marius/catkin_ws/src/UWB-Localization/out3.csv"):
         self.data = []
         self.out = out
 
@@ -34,9 +35,13 @@ class Recorder(object):
 
         id = 2
 
-        odometry = '/Jackal{}/odometry/filtered'.format(id)
-        self.odometry_filtered = rospy.Subscriber(odometry, Odometry,
-                                                  callback=self.create_odometry_callback(DataType.ODOMETRY))
+        # odometry = '/Jackal{}/odometry/filtered'.format(id)
+        # self.odometry_filtered = rospy.Subscriber(odometry, Odometry,
+        #                                           callback=self.create_odometry_callback(DataType.ODOMETRY))
+
+        # odometry = '/Jackal{}/odometry/transformed'.format(id)
+        # self.odometry_filtered = rospy.Subscriber(odometry, Odometry,
+        #                                           callback=self.create_odometry_callback(DataType.ODOMETRY))
 
         odometry = '/Jackal{}/uwb/odom'.format(id)
         self.odometry_uwb = rospy.Subscriber(odometry, Odometry,
@@ -116,6 +121,8 @@ class Recorder(object):
 
         with open(self.out, "w") as file:
             file.writelines(",".join(map(str, d)) + '\n' for d in self.data)
+
+        print "Finished saving"
 
 
 if __name__ == "__main__":

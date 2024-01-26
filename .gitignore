@@ -3,7 +3,7 @@
 build/
 
 *.pyc
-out.csv
+out3.csv
 frames.gv
 frames.pdf
 

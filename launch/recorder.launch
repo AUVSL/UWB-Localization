@@ -1,0 +1,14 @@
+<launch>
+    <node pkg="uwb_localization" name="motion_creator" type="motion_creator.py" output="screen" />
+
+    <group ns="Jackal1">
+        <node pkg="uwb_localization" name="uwb_kalman_localization" type="ukf_uwb_localization.py" output="screen" />
+    </group>
+
+    <group ns="Jackal2">
+        <node pkg="uwb_localization" name="uwb_kalman_localization" type="ukf_uwb_localization.py" output="screen" />
+    </group>
+
+    <node pkg="uwb_localization" name="csv_creator2" type="csv_creator2.py" output="screen" />
+
+</launch>

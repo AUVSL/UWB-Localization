@@ -112,7 +112,8 @@ class TaskTimer(threading.Thread):
 
 
 class SystemTasks:
-    def __init__(self, robot_groups):
+    def __init__(self, robot_groups, scale=1):
+        self.scale = scale
         self.robot_groups = robot_groups
 
         self.tasks = {}
@@ -120,6 +121,12 @@ class SystemTasks:
             self.tasks[key] = []
 
     def add_task(self, seconds, robot_group, robot_id=None, stop=False, **vel_command):
+        seconds *= 1 / self.scale
+        vel_command_temp = dict()
+        for key, item in vel_command.items():
+            vel_command_temp[key] = item * self.scale
+        vel_command = vel_command_temp
+
         if robot_id is None:
             command = lambda: self.robot_groups[robot_group].set(**vel_command)
         else:
@@ -154,8 +161,8 @@ def uwb_localization_test(system_tasks):
     system_tasks.add_task(0, Drone)
     system_tasks.add_task(0, Jackal)
     #
-    system_tasks.add_task(2, Drone, z=1)
-    system_tasks.add_task(5, Drone, z=0)
+    system_tasks.add_task(5, Drone, z=1)
+    system_tasks.add_task(2, Drone, z=0)
     #
     system_tasks.add_task(7, Jackal, x=0)
     #
@@ -188,7 +195,7 @@ if __name__ == "__main__":
     system_tasks = SystemTasks({
         Drone: drones,
         Jackal: jackals
-    })
+    }, scale=1)
 
     uwb_localization_test(system_tasks)
 
